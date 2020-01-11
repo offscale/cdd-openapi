@@ -11,8 +11,8 @@ struct RPCResponse {
 pub fn start_server() {
     let mut io = IoHandler::new();
 
-    io.add_method("project-default", |_params| {
-        let default = openapi::OpenAPI::default();
+    io.add_method("default", |_params| {
+        let default = crate::petstore::petstore();
 
         serde_yaml::to_string(&default)
         .map(|y| 
