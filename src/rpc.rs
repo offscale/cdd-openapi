@@ -2,12 +2,6 @@ use openapiv3 as openapi;
 use jsonrpc_ws_server::*;
 use jsonrpc_ws_server::jsonrpc_core::*;
 
-#[derive(serde::Serialize)]
-struct RPCResponse {
-    code: String,
-    // project: Project,
-}
-
 pub fn start_server() {
     let mut io = IoHandler::new();
 
@@ -15,10 +9,8 @@ pub fn start_server() {
         let default = crate::petstore::petstore();
 
         serde_yaml::to_string(&default)
-        .map(|y| 
-            serde_json::to_value([RPCResponse {
-                code: y
-            }]).unwrap()
+        .map(|code|
+            serde_json::json!([{"code": code}])
         )
         .map_err(|e| {jsonrpc_core::types::error::Error{
             code: jsonrpc_core::types::error::ErrorCode::InternalError,
