@@ -1,5 +1,6 @@
 mod rpc;
-mod petstore;
+mod fixtures;
+mod parse;
 
 fn main() {
     rpc::start_server();
