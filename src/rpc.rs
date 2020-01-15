@@ -20,13 +20,16 @@ pub fn start_server() {
     });
     
     // Returns any models or routes found in a given code block.
-    io.add_method("parse", |params| {
+    io.add_method("parse", |params: jsonrpc_core::Params| {
+        #[derive(serde::Deserialize, Debug)]
+        pub struct CodeRequest {
+            code: String,
+        }
 
-        println!("parse -> params: {:?}", params);
+        let request: CodeRequest = params.parse()?;
+        // println!("parse -> params: {:?}", request.code);
 
-       Ok(Value::String(
-           format!("{:?}", params)
-       )) 
+        Ok(crate::parse::code_to_models(&request.code)) 
     });
 
 	let server = ServerBuilder::new(io)
