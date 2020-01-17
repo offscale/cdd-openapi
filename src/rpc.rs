@@ -33,7 +33,10 @@ pub fn start_server() {
         let request: CodeRequest = params.parse()?;
         // println!("parse -> params: {:?}", request.code);
 
-        Ok(crate::parse::code_to_models(&request.code))
+        Ok(serde_json::json!({
+            "models": crate::parse::extract_models(&request.code),
+            "requests": [],
+        }))
     });
 
 	let server = ServerBuilder::new(io)

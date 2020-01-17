@@ -25,21 +25,26 @@ pub(crate) fn code_to_openapi(code: &str) -> Result<OpenAPI, jsonrpc_core::types
     }})
 }
 
-pub(crate) fn code_to_models(code: &str) -> serde_json::value::Value {
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct Model {
+    name: String,
+    vars: Vec<String>,
+}
+
+pub(crate) fn extract_models(code: &str) -> Vec<Model> {
     let openapi = code_to_openapi(code).expect("code to parse - fix this");
 
-    let models: Vec<String> = openapi.components.map(|components|
-        components.schemas.into_iter().map(|(component_name, _schema)| {
-            // println!("SCHEMA: {:?}", component_name);
-            component_name
-        }).collect()
+    let models:Vec<Model> = openapi.components.map(|components|
+        components.schemas.into_iter().map(|(component_name, schema)| {
+            let vars = schema.map(|schema| {
 
-        // for (component_name, _schema) in components.schemas {
-        //     println!("SCHEMA: {:?}", component_name);
-        // }
+            });
+            Model {
+                name: component_name,
+                vars: Vec::new(),
+            }
+        }).collect()
     ).unwrap_or(Vec::new());
 
-    println!("MODELS: {:?}", models);
-
-    serde_json::json!({"models": models})
+    models
 }
