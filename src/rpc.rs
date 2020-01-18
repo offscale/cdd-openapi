@@ -1,6 +1,14 @@
 use jsonrpc_ws_server::*;
 use jsonrpc_ws_server::jsonrpc_core::*;
 
+fn rpc_error(message: &str) -> jsonrpc_core::types::error::Error {
+    jsonrpc_core::types::error::Error{
+        code: jsonrpc_core::types::error::ErrorCode::InternalError,
+        message: message.into(),
+        data: None,
+    }
+}
+
 pub fn start_server() {
     let mut io = IoHandler::new();
 
@@ -11,14 +19,8 @@ pub fn start_server() {
         let default = crate::fixtures::petstore();
 
         serde_yaml::to_string(&default)
-        .map(|code|
-            serde_json::json!({"code": code})
-        )
-        .map_err(|e| {jsonrpc_core::types::error::Error{
-            code: jsonrpc_core::types::error::ErrorCode::InternalError,
-            message: format!("error: {:?}", e),
-            data: None,
-        }})
+            .map(|code| serde_json::json!({"code": code}))
+            .map_err(|e| rpc_error(&format!("error: {:?}", e)))
     });
     
     // Returns any models or routes found in a given code block.
@@ -30,13 +32,11 @@ pub fn start_server() {
             code: String,
         }
 
-        let request: CodeRequest = params.parse()?;
-        // println!("parse -> params: {:?}", request.code);
+        let request: CodeRequest = params.parse().map_err(|e| rpc_error(&format!("error: {:?}", e)))?;
 
-        Ok(serde_json::json!({
-            "models": crate::parse::extract_models(&request.code),
-            "requests": [],
-        }))
+        crate::parse::extract_project(&request.code)
+            .map(|response| serde_json::json!(response))
+            .map_err(|e| rpc_error(&format!("error: {:?}", e)))
     });
 
 	let server = ServerBuilder::new(io)
