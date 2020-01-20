@@ -16,13 +16,25 @@ use cdd::*;
 //     }})
 // }
 
-pub(crate) fn code_to_openapi(code: &str) -> Result<OpenAPI, jsonrpc_core::types::error::Error> {
+fn read_file(path: &str) -> Result<String, std::io::Error> {
+    use std::fs::File;
+    use std::io::prelude::*;
+
+    let mut f = File::open(std::path::PathBuf::from(path))?;
+    let mut buffer = String::new();
+
+    f.read_to_string(&mut buffer)?;
+
+    Ok(buffer)
+}
+
+pub(crate) fn template(name: &str) -> Result<OpenAPI, failure::Error> {
+    let file_content:String = read_file(&format!("templates/{}.yaml", name))?;
+    Ok(code_to_openapi(&file_content)?)
+}
+
+pub(crate) fn code_to_openapi(code: &str) -> Result<OpenAPI, serde_yaml::Error> {
     serde_yaml::from_str(&code)
-    .map_err(|e| {jsonrpc_core::types::error::Error{
-        code: jsonrpc_core::types::error::ErrorCode::InternalError,
-        message: format!("error: {:?}", e),
-        data: None,
-    }})
 }
 
 // #[derive(serde::Serialize, serde::Deserialize, Debug)]
