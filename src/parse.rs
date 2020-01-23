@@ -1,6 +1,6 @@
-use openapiv3::*;
-use jsonrpc_ws_server::jsonrpc_core;
 use cdd::*;
+use jsonrpc_ws_server::jsonrpc_core;
+use openapiv3::*;
 
 // fn code_to_project(code: &str) -> Result<Project, jsonrpc_core::types::error::Error> {
 //     let openapi = code_to_openapi(&code);
@@ -29,7 +29,7 @@ fn read_file(path: &str) -> Result<String, std::io::Error> {
 }
 
 pub(crate) fn template(name: &str) -> Result<OpenAPI, failure::Error> {
-    let file_content:String = read_file(&format!("templates/{}.yaml", name))?;
+    let file_content: String = read_file(&format!("templates/{}.yaml", name))?;
     Ok(code_to_openapi(&file_content)?)
 }
 
