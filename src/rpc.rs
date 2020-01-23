@@ -1,5 +1,6 @@
 use jsonrpc_ws_server::*;
 use jsonrpc_ws_server::jsonrpc_core::*;
+use crate::models::*;
 
 fn rpc_error(message: &str) -> jsonrpc_core::types::error::Error {
     jsonrpc_core::types::error::Error{
@@ -19,7 +20,7 @@ pub fn start_server() {
     let mut io = IoHandler::new();
 
     // all exposed rpc methods:
-    io.add_method("generate", generate);    // generate new openapi code
+    io.add_method("update", update);        // update existing openapi code from an adt
     io.add_method("template", template);    // return a pre-made openapi template
     io.add_method("default", default);      // get a default template
     io.add_method("parse", parse);          // parse openapi yaml into an adt
@@ -39,39 +40,29 @@ fn template(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
 
     let params:std::collections::HashMap<String, String> = params.parse()?;
 
-    // note that name is unclean, we need to sanitise this! or it's a vuln
-    if let Some(template_file) = params.get("name") {
-        if let Some(filename) = sanitise_filename(template_file) {
-            let template = crate::parse::template(&filename)
-                .map_err(|e| rpc_error(&format!("{}", e)))?;
+    let template_name = params.get("name").ok_or(
+        rpc_error("missing parameter: name"))?;
 
-            return serde_yaml::to_string(&template)
-                .map(|code| serde_json::json!({"code": code}))
-                .map_err(|e| rpc_error(&format!("{}", e)));
-        }
-    };
+    let sanitised_filename = sanitise_filename(template_name).ok_or(
+        rpc_error("invalid parameter: name"))?;
 
-    Err(rpc_error(&format!("invalid template name")))
+    let template = crate::parse::template(&sanitised_filename)
+        .map_err(|e| rpc_error(&format!("{}", e)))?;
+
+    return serde_yaml::to_string(&template)
+        .map(|code| serde_json::json!({"code": code}))
+        .map_err(|e| rpc_error(&format!("{}", e)))
 }
 
-fn generate(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
-    println!("-> template: {:?}", params);
+/// update a code block with directives from an adt structure
+fn update(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
+    println!("-> update: {:?}", params);
 
-    let params:std::collections::HashMap<String, String> = params.parse()?;
+    let params:UpdateRequest = params.parse()?;
 
-    // note that name is unclean, we need to sanitise this! or it's a vuln
-    if let Some(template_file) = params.get("name") {
-        if let Some(filename) = sanitise_filename(template_file) {
-            let template = crate::parse::template(&filename)
-                .map_err(|e| rpc_error(&format!("{}", e)))?;
-
-            return serde_yaml::to_string(&template)
-                .map(|code| serde_json::json!({"code": code}))
-                .map_err(|e| rpc_error(&format!("{}", e)));
-        }
-    };
-
-    Err(rpc_error(&format!("invalid template name")))
+    return crate::generate::update(params.project, &params.code)
+        .map(|code| serde_json::json!({"code": code}))
+        .map_err(|e| rpc_error(&format!("{}", e)));
 }
 
 fn default(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
