@@ -1,6 +1,7 @@
 use cdd::*;
-use jsonrpc_ws_server::jsonrpc_core;
+// use jsonrpc_ws_server::jsonrpc_core;
 use openapiv3::*;
+use url::Url;
 
 // fn code_to_project(code: &str) -> Result<Project, jsonrpc_core::types::error::Error> {
 //     let openapi = code_to_openapi(&code);
@@ -65,8 +66,8 @@ pub(crate) fn code_to_openapi(code: &str) -> Result<OpenAPI, serde_yaml::Error> 
 // }
 
 pub(crate) fn extract_project(code: &str) -> Result<Project, failure::Error> {
-    let openapi = code_to_openapi(code).expect("code to parse - fix this");
-    Project::parse_yml(openapi)
+    let openapi:OpenAPI = code_to_openapi(code)?;
+    Ok(extract_project_from_openapi(&openapi))
 
     // let models:Vec<Model> = openapi.components.map(|components|
     //     components.schemas.into_iter().map(|(component_name, schema)| {
@@ -80,4 +81,41 @@ pub(crate) fn extract_project(code: &str) -> Result<Project, failure::Error> {
     // ).unwrap_or(Vec::new());
 
     // models
+}
+
+pub fn extract_project_from_openapi(openapi: &OpenAPI) -> Project {
+    Project {
+        info: extract_info_from_openapi(openapi),
+        models: extract_models_from_openapi(openapi),
+        requests: extract_requests_from_openapi(openapi),
+    }
+}
+
+pub fn extract_info_from_openapi(openapi: &OpenAPI) -> cdd::Info {
+    let server = extract_server_from_openapi(openapi);
+
+    let url = Url::parse(server.as_str());
+    let host:String = url.clone().map(|url| format!("{}://{}", url.scheme(), url.host_str().unwrap_or(""))).unwrap_or(String::new());
+    let endpoint:String = url.map(|url| url.path().to_string()).unwrap_or(String::new());
+
+    cdd::Info {
+        host,
+        endpoint,
+    }
+}
+
+pub fn extract_server_from_openapi(openapi: &OpenAPI) -> String {
+        openapi
+            .servers
+            .first()
+            .map(|s| s.url.clone())
+            .unwrap_or_else(|| "".to_string())
+}
+
+pub fn extract_models_from_openapi(openapi: &OpenAPI) -> Vec<Model> {
+    Vec::new()
+}
+
+pub fn extract_requests_from_openapi(openapi: &OpenAPI) -> Vec<Request> {
+    Vec::new()
 }
