@@ -2,26 +2,11 @@ use cdd::*;
 use openapiv3::*;
 use url::Url;
 
-fn read_file(path: &str) -> Result<String, std::io::Error> {
-    use std::fs::File;
-    use std::io::prelude::*;
 
-    let mut f = File::open(std::path::PathBuf::from(path))?;
-    let mut buffer = String::new();
 
-    f.read_to_string(&mut buffer)?;
 
-    Ok(buffer)
-}
 
-pub(crate) fn template(name: &str) -> Result<OpenAPI, failure::Error> {
-    let file_content: String = read_file(&format!("templates/{}.yaml", name))?;
-    Ok(code_to_openapi(&file_content)?)
-}
 
-pub(crate) fn code_to_openapi(code: &str) -> Result<OpenAPI, serde_yaml::Error> {
-    serde_yaml::from_str(&code)
-}
 
 fn component_is_valid_object(schema: ReferenceOr<Schema>) -> bool {
     if let ReferenceOr::Item(schema) = schema {
@@ -43,7 +28,6 @@ fn extract_object_type_from_openapi(schema: openapiv3::ReferenceOr<Schema>) -> O
             }
         }
     }
-
     None
 }
 
@@ -60,28 +44,16 @@ fn extract_variables_from_openapi(object_type: ObjectType) -> Vec<Variable> {
                 optional: false, // write function for this
                 value: None,
                 variable_type
-
             });
         }
-
-
     };
 
     variables
 }
 
-pub(crate) fn extract_project(code: &str) -> Result<Project, failure::Error> {
-    let openapi:OpenAPI = code_to_openapi(code)?;
-    Ok(extract_project_from_openapi(&openapi))
-}
 
-pub fn extract_project_from_openapi(openapi: &OpenAPI) -> Project {
-    Project {
-        info: extract_info_from_openapi(openapi),
-        models: extract_models_from_openapi(openapi),
-        requests: extract_requests_from_openapi(openapi),
-    }
-}
+
+
 
 pub fn extract_info_from_openapi(openapi: &OpenAPI) -> cdd::Info {
     let server = extract_server_from_openapi(openapi);
@@ -158,7 +130,6 @@ pub fn extract_variable_type_from_openapi(schema: ReferenceOr<Box<Schema>>) -> O
             return Some(convert_openapi_type_to_variable_type(variable_type));
         }
     }
-
     None
 }
 

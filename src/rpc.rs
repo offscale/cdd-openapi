@@ -36,7 +36,7 @@ use serde_json::value::Value;
 use jsonrpc_core::types::error::Error;
 
 fn template(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
-    println!("-> template: {:?}", params);
+    log(format!("-> template: {:?}", params));
 
     let params:std::collections::HashMap<String, String> = params.parse()?;
 
@@ -46,7 +46,7 @@ fn template(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
     let sanitised_filename = sanitise_filename(template_name).ok_or(
         rpc_error("invalid parameter: name"))?;
 
-    let template = crate::parse::template(&sanitised_filename)
+    let template = crate::template::fetch_template_to_openapi(&sanitised_filename)
         .map_err(|e| rpc_error(&format!("{}", e)))?;
 
     return serde_yaml::to_string(&template)
@@ -56,17 +56,17 @@ fn template(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
 
 /// update a code block with directives from an adt structure
 fn update(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
-    println!("-> update: {:?}", params);
+    log(format!("-> update: {:?}", params));
 
     let params:UpdateRequest = params.parse()?;
 
-    return crate::generate::update(params.project, &params.code)
+    return crate::generator::update(params.project, &params.code)
         .map(|code| serde_json::json!({"code": code}))
         .map_err(|e| rpc_error(&format!("{}", e)));
 }
 
 fn default(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
-    println!("-> default: {:?}", params);
+    log(format!("-> default: {:?}", params));
 
     let default = crate::fixtures::petstore();
 
@@ -76,7 +76,7 @@ fn default(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
 }
 
 fn parse(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
-    println!("-> parse: {:?}", params);
+    log(format!("-> parse: {:?}", params));
 
     #[derive(serde::Deserialize, Debug)]
     pub struct CodeRequest {
@@ -85,7 +85,11 @@ fn parse(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
 
     let request: CodeRequest = params.parse().map_err(|e| rpc_error(&format!("{}", e)))?;
 
-    crate::parse::extract_project(&request.code)
+    crate::parser::parse_yaml_to_project(&request.code)
         .map(|response| serde_json::json!(response))
         .map_err(|e| rpc_error(&format!("{}", e)))
+}
+
+fn log(msg: String) {
+    println!("{}", crate::util::truncate(msg, 128));
 }
