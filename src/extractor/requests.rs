@@ -52,6 +52,12 @@ fn extract_params_from_openapi(parameters: Vec<ReferenceOr<Parameter>>) -> Vec<V
                     value: None,
                     variable_type: VariableType::StringType,
                 }),
+                Parameter::Path {parameter_data, ..} => variables.push(Variable {
+                    name: parameter_data.name,
+                    optional: parameter_data.required,
+                    value: None,
+                    variable_type: VariableType::StringType,
+                }),
                 _ => (),
             }
         }
