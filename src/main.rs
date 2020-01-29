@@ -1,13 +1,12 @@
-mod rpc;
-mod fixtures;
-mod parse;
-mod variable;
-mod models;
-mod generator;
 mod extractor;
+mod fixtures;
+mod generator;
+mod models;
+mod parser;
+mod rpc;
 mod template;
 mod util;
-mod parser;
+mod variable;
 
 fn main() {
     rpc::start_server();

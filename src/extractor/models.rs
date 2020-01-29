@@ -63,7 +63,7 @@ fn extract_variables_from_openapi(object_type: ObjectType) -> Vec<Variable> {
     variables
 }
 
-pub fn extract_variable_type_from_openapi(schema: ReferenceOr<Box<Schema>>) -> Option<VariableType> {
+fn extract_variable_type_from_openapi(schema: ReferenceOr<Box<Schema>>) -> Option<VariableType> {
     if let ReferenceOr::Item(schema) = schema {
         if let SchemaKind::Type(variable_type) = schema.schema_kind {
             return Some(convert_openapi_type_to_variable_type(variable_type));
@@ -72,7 +72,7 @@ pub fn extract_variable_type_from_openapi(schema: ReferenceOr<Box<Schema>>) -> O
     None
 }
 
-pub fn convert_openapi_type_to_variable_type(t: Type) -> VariableType {
+fn convert_openapi_type_to_variable_type(t: Type) -> VariableType {
     match t {
         Type::String(_) => VariableType::StringType,
         Type::Number(_) => VariableType::FloatType,
