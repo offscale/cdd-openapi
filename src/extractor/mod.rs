@@ -12,7 +12,7 @@ pub fn extract_project_from_openapi(openapi: &OpenAPI) -> Project {
     }
 }
 
-pub fn extract_info_from_openapi(openapi: &OpenAPI) -> cdd::Info {
+pub fn extract_info_from_openapi(openapi: &OpenAPI) -> Option<cdd::Info> {
     use url::Url;
 
     let server = extract_server_from_openapi(openapi);
@@ -20,10 +20,10 @@ pub fn extract_info_from_openapi(openapi: &OpenAPI) -> cdd::Info {
     let host:String = url.clone().map(|url| format!("{}://{}", url.scheme(), url.host_str().unwrap_or(""))).unwrap_or(String::new());
     let endpoint:String = url.map(|url| url.path().to_string()).unwrap_or(String::new());
 
-    cdd::Info {
+    Some(cdd::Info {
         host,
         endpoint,
-    }
+    })
 }
 
 pub fn extract_server_from_openapi(openapi: &OpenAPI) -> String {
