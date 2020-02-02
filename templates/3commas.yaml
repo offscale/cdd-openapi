@@ -1,0 +1,3579 @@
+info:
+  title: API title
+  version: 0.0.1
+swagger: "2.0"
+produces:
+  - application/json
+host: api.3commas.io
+basePath: /public/api
+tags:
+  - name: bots
+    description: Operations about bots
+  - name: deals
+    description: Operations about deals
+  - name: accounts
+    description: Operations about accounts
+  - name: smart_trades
+    description: Operations about smart_trades
+  - name: marketplace
+    description: Operations about marketplaces
+  - name: ping
+    description: Operations about pings
+  - name: time
+    description: Operations about times
+paths:
+  /ver1/bots/strategy_list:
+    get:
+      description: "Available strategy list for bot (Permission: BOTS_READ, Security: SIGNED)"
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: account_id
+          description: id from GET /ver1/accounts
+          type: integer
+          format: int32
+          required: false
+        - in: query
+          name: type
+          type: string
+          enum:
+            - simple
+            - composite
+          required: false
+        - in: query
+          name: strategy
+          type: string
+          enum:
+            - long
+            - short
+          required: false
+      responses:
+        "200":
+          description: "Available strategy list for bot (Permission: BOTS_READ, Security: SIGNED)"
+      tags:
+        - bots
+      operationId: getVer1BotsStrategyList
+  /ver1/bots/pairs_black_list:
+    get:
+      description: "Black List for bot pairs (Permission: BOTS_READ, Security: SIGNED)"
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: "Black List for bot pairs (Permission: BOTS_READ, Security: SIGNED)"
+      tags:
+        - bots
+      operationId: getVer1BotsPairsBlackList
+  /ver1/bots/update_pairs_black_list:
+    post:
+      description: "Create or Update pairs BlackList for bots (Permission: BOTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: pairs
+          type: array
+          items:
+            type: string
+          required: true
+      responses:
+        "201":
+          description: "Create or Update pairs BlackList for bots (Permission: BOTS_WRITE, Security: SIGNED)"
+      tags:
+        - bots
+      operationId: postVer1BotsUpdatePairsBlackList
+  /ver1/bots/create_bot:
+    post:
+      description: "Create bot (Permission: BOTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: name
+          type: string
+          required: true
+        - in: formData
+          name: account_id
+          description: id from GET /ver1/accounts
+          type: integer
+          format: int32
+          required: true
+        - in: formData
+          name: pairs
+          type: array
+          items:
+            type: string
+          required: true
+        - in: formData
+          name: max_active_deals
+          type: integer
+          format: int32
+          default: 1
+          required: false
+        - in: formData
+          name: base_order_volume
+          description: Base order size
+          type: number
+          format: double
+          required: true
+        - in: formData
+          name: base_order_volume_type
+          description: base order volume currency
+          type: string
+          enum:
+            - quote_currency
+            - base_currency
+            - percent
+            - xbt
+          required: false
+        - in: formData
+          name: take_profit
+          description: Target profit(percentage)
+          type: number
+          format: double
+          required: true
+        - in: formData
+          name: safety_order_volume
+          description: Safety trade size
+          type: number
+          format: double
+          required: true
+        - in: formData
+          name: safety_order_volume_type
+          description: safety order volume currency
+          type: string
+          enum:
+            - quote_currency
+            - base_currency
+            - percent
+            - xbt
+          required: false
+        - in: formData
+          name: martingale_volume_coefficient
+          type: number
+          format: double
+          default: 1
+          required: true
+        - in: formData
+          name: martingale_step_coefficient
+          type: number
+          format: double
+          default: 1
+          required: true
+        - in: formData
+          name: max_safety_orders
+          description: Max safety trades count
+          type: integer
+          format: int32
+          required: true
+        - in: formData
+          name: active_safety_orders_count
+          description: Max active safety trades count
+          type: integer
+          format: int32
+          required: true
+        - in: formData
+          name: stop_loss_percentage
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: cooldown
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: trailing_enabled
+          description: Enable trailing take profit. Binance only.
+          type: boolean
+          required: false
+        - in: formData
+          name: trailing_deviation
+          description: required if trailing_enabled
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: btc_price_limit
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: strategy
+          type: string
+          default: long
+          enum:
+            - short
+            - long
+          required: false
+        - in: formData
+          name: safety_order_step_percentage
+          description: Price deviation to open safety trades(percentage)
+          type: number
+          format: double
+          required: true
+        - in: formData
+          name: take_profit_type
+          description: "Percentage: base – from base order, total – from total volume"
+          type: string
+          required: true
+        - in: formData
+          name: strategy_list
+          description: |-
+            For manual signals: [{"strategy":"manual"}] or []<br>
+                                                                    For non-stop(1 pair only): [{"strategy":"nonstop"}]<br>
+                                                                    QFL: {"options"=>{"type"=>"original"}, "strategy"=>"qfl"}] <br>
+                                                                    TradingView: [{"options"=>{"time"=>"5m", "type"=>"buy_or_strong_buy"}, "strategy"=>"trading_view"}
+          type: array
+          items:
+            type: json
+          required: true
+        - in: formData
+          name: leverage_type
+          description: Used for Bitmex bots only
+          type: string
+          default: not_specified
+          enum:
+            - custom
+            - cross
+            - not_specified
+          required: false
+        - in: formData
+          name: leverage_custom_value
+          description: required if leverage_type is custom
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: min_price
+          description: minimum price to open deal
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: max_price
+          description: maximum price to open deal
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: stop_loss_timeout_enabled
+          type: boolean
+          required: false
+        - in: formData
+          name: stop_loss_timeout_in_seconds
+          description: StopLoss timeout in seconds if StopLoss timeout enabled
+          type: integer
+          format: int32
+          required: false
+        - in: formData
+          name: min_volume_btc_24h
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: tsl_enabled
+          description: Enable trailing stop loss. Bitmex only.
+          type: boolean
+          required: false
+        - in: formData
+          name: deal_start_delay_seconds
+          description: Deal start delay in seconds
+          type: integer
+          format: int32
+          required: false
+        - in: formData
+          name: profit_currency
+          description: Take profit currency
+          type: string
+          enum:
+            - quote_currency
+            - base_currency
+          required: false
+        - in: formData
+          name: start_order_type
+          type: string
+          enum:
+            - limit
+            - market
+          required: false
+        - in: formData
+          name: stop_loss_type
+          type: string
+          enum:
+            - stop_loss
+            - stop_loss_and_disable_bot
+          required: false
+        - in: formData
+          name: disable_after_deals_count
+          description: Bot will be disabled after opening this number of deals
+          type: integer
+          format: int32
+          required: false
+        - in: formData
+          name: allowed_deals_on_same_pair
+          description: Allow specific number of deals on the same pair. Multibot only.
+          type: integer
+          format: int32
+          required: false
+      responses:
+        "201":
+          description: "Create bot (Permission: BOTS_WRITE, Security: SIGNED)"
+      tags:
+        - bots
+      operationId: postVer1BotsCreateBot
+  /ver1/bots:
+    get:
+      description: "User bots (Permission: BOTS_READ, Security: SIGNED)"
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: limit
+          description: "Limit records. Max: 100"
+          type: integer
+          format: int32
+          default: 50
+          required: false
+        - in: query
+          name: offset
+          description: Offset records
+          type: integer
+          format: int32
+          required: false
+        - in: query
+          name: account_id
+          description: Account to show bots on. Return all if not specified. Gather this from GET /ver1/accounts
+          type: integer
+          format: int32
+          required: false
+        - in: query
+          name: scope
+          type: string
+          enum:
+            - enabled
+            - disabled
+          required: false
+        - in: query
+          name: strategy
+          type: string
+          enum:
+            - long
+            - short
+          required: false
+      responses:
+        "200":
+          description: "User bots (Permission: BOTS_READ, Security: SIGNED)"
+      tags:
+        - bots
+      operationId: getVer1Bots
+  /ver1/bots/stats:
+    get:
+      description: "Get bot stats (Permission: BOTS_READ, Security: SIGNED)"
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: account_id
+          description: Account to show on. Null - show for all. Gather this from GET /ver1/accounts
+          type: integer
+          format: int32
+          required: false
+        - in: query
+          name: bot_id
+          description: Bots to show on. Null - show for all
+          type: integer
+          format: int32
+          required: false
+      responses:
+        "200":
+          description: "Get bot stats (Permission: BOTS_READ, Security: SIGNED)"
+      tags:
+        - bots
+      operationId: getVer1BotsStats
+  "/ver1/bots/{bot_id}/update":
+    patch:
+      description: "Edit bot (Permission: BOTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: name
+          type: string
+          required: true
+        - in: formData
+          name: pairs
+          type: array
+          items:
+            type: string
+          required: true
+        - in: formData
+          name: max_active_deals
+          type: integer
+          format: int32
+          default: 1
+          required: false
+        - in: formData
+          name: base_order_volume
+          description: Base order size
+          type: number
+          format: double
+          required: true
+        - in: formData
+          name: base_order_volume_type
+          description: base order volume currency
+          type: string
+          enum:
+            - quote_currency
+            - base_currency
+            - percent
+            - xbt
+          required: false
+        - in: formData
+          name: take_profit
+          description: Target profit(percentage)
+          type: number
+          format: double
+          required: true
+        - in: formData
+          name: safety_order_volume
+          description: Safety trade size
+          type: number
+          format: double
+          required: true
+        - in: formData
+          name: safety_order_volume_type
+          description: safety order volume currency
+          type: string
+          enum:
+            - quote_currency
+            - base_currency
+            - percent
+            - xbt
+          required: false
+        - in: formData
+          name: martingale_volume_coefficient
+          type: number
+          format: double
+          default: 1
+          required: true
+        - in: formData
+          name: martingale_step_coefficient
+          type: number
+          format: double
+          default: 1
+          required: true
+        - in: formData
+          name: max_safety_orders
+          description: Max safety trades count
+          type: integer
+          format: int32
+          required: true
+        - in: formData
+          name: active_safety_orders_count
+          description: Max active safety trades count
+          type: integer
+          format: int32
+          required: true
+        - in: formData
+          name: stop_loss_percentage
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: cooldown
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: trailing_enabled
+          description: Enable trailing take profit. Binance only.
+          type: boolean
+          required: false
+        - in: formData
+          name: trailing_deviation
+          description: required if trailing_enabled
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: btc_price_limit
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: safety_order_step_percentage
+          description: Price deviation to open safety trades(percentage)
+          type: number
+          format: double
+          required: true
+        - in: formData
+          name: take_profit_type
+          description: "Percentage: base – from base order, total – from total volume"
+          type: string
+          default: total
+          enum:
+            - total
+            - base
+          required: true
+        - in: formData
+          name: strategy_list
+          description: |-
+            For manual signals: [{"strategy":"nonstop"}] or []<br>
+                                                                      For non-stop(1 pair only): [{"strategy":"nonstop"}]<br>
+                                                                      QFL: {"options"=>{"type"=>"original"}, "strategy"=>"qfl"}] <br>
+                                                                      TradingView: [{"options"=>{"time"=>"5m", "type"=>"buy_or_strong_buy"}, "strategy"=>"trading_view"}
+          type: array
+          items:
+            type: json
+          required: true
+        - in: formData
+          name: leverage_type
+          description: Used for Bitmex bots only
+          type: string
+          default: not_specified
+          enum:
+            - custom
+            - cross
+            - not_specified
+          required: false
+        - in: formData
+          name: leverage_custom_value
+          description: required if leverage_type is custom
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: min_price
+          description: minimum price to open deal
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: max_price
+          description: maximum price to open deal
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: stop_loss_timeout_enabled
+          type: boolean
+          required: false
+        - in: formData
+          name: stop_loss_timeout_in_seconds
+          description: StopLoss timeout in seconds if StopLoss timeout enabled
+          type: integer
+          format: int32
+          required: false
+        - in: formData
+          name: min_volume_btc_24h
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: tsl_enabled
+          description: Enable trailing stop loss. Bitmex only.
+          type: boolean
+          required: false
+        - in: formData
+          name: deal_start_delay_seconds
+          description: Deal start delay in seconds
+          type: integer
+          format: int32
+          required: false
+        - in: formData
+          name: profit_currency
+          description: Take profit currency
+          type: string
+          enum:
+            - quote_currency
+            - base_currency
+          required: false
+        - in: formData
+          name: start_order_type
+          type: string
+          enum:
+            - limit
+            - market
+          required: false
+        - in: formData
+          name: stop_loss_type
+          type: string
+          enum:
+            - stop_loss
+            - stop_loss_and_disable_bot
+          required: false
+        - in: formData
+          name: disable_after_deals_count
+          description: Bot will be disabled after opening this number of deals
+          type: integer
+          format: int32
+          required: false
+        - in: formData
+          name: allowed_deals_on_same_pair
+          description: Allow specific number of deals on the same pair. Multibot only.
+          type: integer
+          format: int32
+          required: false
+        - in: path
+          name: bot_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "200":
+          description: "Edit bot (Permission: BOTS_WRITE, Security: SIGNED)"
+      tags:
+        - bots
+      operationId: patchVer1BotsBotIdUpdate
+  "/ver1/bots/{bot_id}/disable":
+    post:
+      description: "Disable bot (Permission: BOTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: bot_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "Disable bot (Permission: BOTS_WRITE, Security: SIGNED)"
+      tags:
+        - bots
+      operationId: postVer1BotsBotIdDisable
+  "/ver1/bots/{bot_id}/enable":
+    post:
+      description: "Enable bot (Permission: BOTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: bot_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "Enable bot (Permission: BOTS_WRITE, Security: SIGNED)"
+      tags:
+        - bots
+      operationId: postVer1BotsBotIdEnable
+  "/ver1/bots/{bot_id}/start_new_deal":
+    post:
+      description: "Start new deal asap (Permission: BOTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: pair
+          description: Can be omited for simple bot
+          type: string
+          required: false
+        - in: formData
+          name: skip_signal_checks
+          description: If false or not specified then all paramaters like signals or volume filters will be checked. If true - those checks will be skipped
+          type: boolean
+          required: false
+        - in: formData
+          name: skip_open_deals_checks
+          description: If true then you will be allowed to open more then one deal per pair in composite bot
+          type: boolean
+          required: false
+        - in: path
+          name: bot_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "Start new deal asap (Permission: BOTS_WRITE, Security: SIGNED)"
+      tags:
+        - bots
+      operationId: postVer1BotsBotIdStartNewDeal
+  "/ver1/bots/{bot_id}/delete":
+    post:
+      description: "Delete bot (Permission: BOTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: bot_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "Delete bot (Permission: BOTS_WRITE, Security: SIGNED)"
+      tags:
+        - bots
+      operationId: postVer1BotsBotIdDelete
+  "/ver1/bots/{bot_id}/panic_sell_all_deals":
+    post:
+      description: "Panic sell all bot deals (Permission: BOTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: bot_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "Panic sell all bot deals (Permission: BOTS_WRITE, Security: SIGNED)"
+      tags:
+        - bots
+      operationId: postVer1BotsBotIdPanicSellAllDeals
+  "/ver1/bots/{bot_id}/cancel_all_deals":
+    post:
+      description: "Cancel all bot deals (Permission: BOTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: bot_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "Cancel all bot deals (Permission: BOTS_WRITE, Security: SIGNED)"
+      tags:
+        - bots
+      operationId: postVer1BotsBotIdCancelAllDeals
+  "/ver1/bots/{bot_id}/show":
+    get:
+      description: "Bot info (Permission: BOTS_READ, Security: SIGNED)"
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: bot_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "200":
+          description: "Bot info (Permission: BOTS_READ, Security: SIGNED)"
+      tags:
+        - bots
+      operationId: getVer1BotsBotIdShow
+  /ver1/deals:
+    get:
+      description: "User deals (Permission: BOTS_READ, Security: SIGNED)"
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: limit
+          description: "Limit records. Max: 1_000"
+          type: integer
+          format: int32
+          default: 50
+          required: false
+        - in: query
+          name: offset
+          description: Offset records
+          type: integer
+          format: int32
+          required: false
+        - in: query
+          name: account_id
+          description: Account to show bots on. Return all if not specified. Gather this from GET /ver1/accounts
+          type: integer
+          format: int32
+          required: false
+        - in: query
+          name: bot_id
+          description: Bot show deals on. Return all if not specified
+          type: integer
+          format: int32
+          required: false
+        - in: query
+          name: scope
+          description: "active - active deals, finished - finished deals, completed - successfully completed, cancelled - cancelled deals, failed - failed deals, any other value or null (default) - all deals"
+          type: string
+          required: false
+        - in: query
+          name: order
+          type: string
+          default: created_at
+          enum:
+            - created_at
+            - closed_at
+          required: false
+      responses:
+        "200":
+          description: "User deals (Permission: BOTS_READ, Security: SIGNED)"
+      tags:
+        - deals
+      operationId: getVer1Deals
+  "/ver1/deals/{deal_id}/update_max_safety_orders":
+    post:
+      description: "DEPRECATED, Update max safety orders (Permission: BOTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: max_safety_orders
+          description: New maximum safety orders value
+          type: integer
+          format: int32
+          required: true
+        - in: path
+          name: deal_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "DEPRECATED, Update max safety orders (Permission: BOTS_WRITE, Security: SIGNED)"
+      tags:
+        - deals
+      operationId: postVer1DealsDealIdUpdateMaxSafetyOrders
+  "/ver1/deals/{deal_id}/panic_sell":
+    post:
+      description: "Panic sell deal (Permission: BOTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: deal_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "Panic sell deal (Permission: BOTS_WRITE, Security: SIGNED)"
+      tags:
+        - deals
+      operationId: postVer1DealsDealIdPanicSell
+  "/ver1/deals/{deal_id}/cancel":
+    post:
+      description: "Cancel deal (Permission: BOTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: deal_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "Cancel deal (Permission: BOTS_WRITE, Security: SIGNED)"
+      tags:
+        - deals
+      operationId: postVer1DealsDealIdCancel
+  "/ver1/deals/{deal_id}/update_deal":
+    patch:
+      description: "Update deal (Permission: BOTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: take_profit
+          description: New take profit value
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: profit_currency
+          type: string
+          enum:
+            - quote_currency
+            - base_currency
+          required: false
+        - in: formData
+          name: take_profit_type
+          description: "base – from base order, total – from total volume"
+          type: string
+          required: false
+        - in: formData
+          name: trailing_enabled
+          type: boolean
+          required: false
+        - in: formData
+          name: trailing_deviation
+          description: New trailing deviation value
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: stop_loss_percentage
+          description: New stop loss percentage value
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: max_safety_orders
+          description: New max safety orders value
+          type: integer
+          format: int32
+          required: false
+        - in: formData
+          name: active_safety_orders_count
+          description: New active safety orders count value
+          type: integer
+          format: int32
+          required: false
+        - in: formData
+          name: stop_loss_timeout_enabled
+          type: boolean
+          required: false
+        - in: formData
+          name: stop_loss_timeout_in_seconds
+          description: StopLoss timeout in seconds if StopLoss timeout enabled
+          type: integer
+          format: int32
+          required: false
+        - in: formData
+          name: tsl_enabled
+          description: Trailing stop loss enabled
+          type: boolean
+          required: false
+        - in: formData
+          name: stop_loss_type
+          type: string
+          enum:
+            - stop_loss
+            - stop_loss_and_disable_bot
+          required: false
+        - in: path
+          name: deal_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "200":
+          description: "Update deal (Permission: BOTS_WRITE, Security: SIGNED)"
+      tags:
+        - deals
+      operationId: patchVer1DealsDealIdUpdateDeal
+  "/ver1/deals/{deal_id}/update_tp":
+    post:
+      description: "DEPRECATED, Update take profit condition. Deal status should be bought (Permission: BOTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: new_take_profit_percentage
+          description: New take profit value
+          type: number
+          format: double
+          required: true
+        - in: path
+          name: deal_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "DEPRECATED, Update take profit condition. Deal status should be bought (Permission: BOTS_WRITE, Security: SIGNED)"
+      tags:
+        - deals
+      operationId: postVer1DealsDealIdUpdateTp
+  "/ver1/deals/{deal_id}/show":
+    get:
+      description: "Info about specific deal (Permission: BOTS_READ, Security: SIGNED)"
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: deal_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "200":
+          description: "Info about specific deal (Permission: BOTS_READ, Security: SIGNED)"
+      tags:
+        - deals
+      operationId: getVer1DealsDealIdShow
+  "/ver1/deals/{deal_id}/cancel_order":
+    post:
+      description: "cancel manual safety orders (Permission: BOTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: order_id
+          description: manual safety order id
+          type: string
+          required: true
+        - in: path
+          name: deal_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "cancel manual safety orders (Permission: BOTS_WRITE, Security: SIGNED)"
+      tags:
+        - deals
+      operationId: postVer1DealsDealIdCancelOrder
+  "/ver1/deals/{deal_id}/market_orders":
+    get:
+      description: "deal safety orders (Permission: BOTS_READ, Security: SIGNED)"
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: deal_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "200":
+          description: "deal safety orders (Permission: BOTS_READ, Security: SIGNED)"
+      tags:
+        - deals
+      operationId: getVer1DealsDealIdMarketOrders
+  "/ver1/deals/{deal_id}/add_funds":
+    post:
+      description: "adding manual safety order (Permission: BOTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: quantity
+          description: safety order quantity
+          type: number
+          format: double
+          required: true
+        - in: formData
+          name: is_market
+          description: "true - use MARKET order, false - use LIMIT order"
+          type: boolean
+          required: true
+        - in: formData
+          name: response_type
+          type: string
+          default: empty
+          enum:
+            - empty
+            - deal
+            - market_order
+          required: false
+        - in: formData
+          name: rate
+          description: safety order rate. Required if LIMIT order used
+          type: number
+          format: double
+          required: true
+        - in: path
+          name: deal_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "adding manual safety order (Permission: BOTS_WRITE, Security: SIGNED)"
+      tags:
+        - deals
+      operationId: postVer1DealsDealIdAddFunds
+  "/ver1/deals/{deal_id}/data_for_adding_funds":
+    get:
+      description: "Info required to add funds correctly: available amounts, exchange limitations etc  (Permission: BOTS_READ, Security: SIGNED)"
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: deal_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "200":
+          description: "Info required to add funds correctly: available amounts, exchange limitations etc  (Permission: BOTS_READ, Security: SIGNED)"
+      tags:
+        - deals
+      operationId: getVer1DealsDealIdDataForAddingFunds
+  /ver1/accounts/new:
+    post:
+      description: "Add exchange account  (Permission: ACCOUNTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: type
+          description: check market_code in market_list method
+          type: string
+          required: true
+        - in: formData
+          name: name
+          description: Account name (any string)
+          type: string
+          required: true
+        - in: formData
+          name: api_key
+          description: Requires unless type = binance_dex
+          type: string
+          required: false
+        - in: formData
+          name: secret
+          description: Requires unless type = binance_dex
+          type: string
+          required: false
+        - in: formData
+          name: customer_id
+          description: For Bitstamp
+          type: string
+          required: false
+        - in: formData
+          name: passphrase
+          description: For Coinbase Pro (GDAX)
+          type: string
+          required: false
+        - in: formData
+          name: how_connect
+          type: string
+          enum:
+            - mnemonic_phrase
+            - keystore
+          required: false
+        - in: formData
+          name: keystore
+          description: keystore file content. Requires if type = binance_dex and how_connect = keystore
+          type: json
+          required: false
+        - in: formData
+          name: wallet_password
+          description: Requires if type = binance_dex and how_connect = keystore
+          type: string
+          required: false
+        - in: formData
+          name: mnemonic_phrase
+          description: Requires if type = binance_dex and how_connect = mnemonic_phrase
+          type: string
+          required: false
+      responses:
+        "201":
+          description: "Add exchange account  (Permission: ACCOUNTS_WRITE, Security: SIGNED)"
+      tags:
+        - accounts
+      operationId: postVer1AccountsNew
+  /ver1/accounts/update:
+    post:
+      description: Edit exchange account
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: account_id
+          type: integer
+          format: int32
+          required: true
+        - in: formData
+          name: name
+          description: Account name (any string)
+          type: string
+          required: false
+        - in: formData
+          name: api_key
+          type: string
+          required: false
+        - in: formData
+          name: secret
+          type: string
+          required: false
+        - in: formData
+          name: customer_id
+          description: For Bitstamp
+          type: string
+          required: false
+        - in: formData
+          name: passphrase
+          description: For Coinbase Pro (GDAX)
+          type: string
+          required: false
+      responses:
+        "201":
+          description: Edit exchange account
+      tags:
+        - accounts
+      operationId: postVer1AccountsUpdate
+  /ver1/accounts:
+    get:
+      description: "User connected exchanges(and EthereumWallet) list (Permission: ACCOUNTS_READ, Security: SIGNED)"
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: "User connected exchanges(and EthereumWallet) list (Permission: ACCOUNTS_READ, Security: SIGNED)"
+      tags:
+        - accounts
+      operationId: getVer1Accounts
+  /ver1/accounts/market_list:
+    get:
+      description: "Supported markets list (Permission: NONE, Security: NONE)"
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: "Supported markets list (Permission: NONE, Security: NONE)"
+      tags:
+        - accounts
+      operationId: getVer1AccountsMarketList
+  /ver1/accounts/market_pairs:
+    get:
+      description: All market pairs
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: pretty_display_type
+          description: pretty_display_type from account model
+          type: string
+          required: true
+      responses:
+        "200":
+          description: All market pairs
+      tags:
+        - accounts
+      operationId: getVer1AccountsMarketPairs
+  /ver1/accounts/currency_rates:
+    get:
+      description: "Currency rates and limits (Permission: NONE, Security: NONE)"
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: pretty_display_type
+          description: pretty_display_type from account model
+          type: string
+          required: true
+        - in: query
+          name: pair
+          description: Pair
+          type: string
+          required: true
+      responses:
+        "200":
+          description: "Currency rates and limits (Permission: NONE, Security: NONE)"
+      tags:
+        - accounts
+      operationId: getVer1AccountsCurrencyRates
+  "/ver1/accounts/{account_id}/sell_all_to_usd":
+    post:
+      description: "Sell all to USD  (Permission: ACCOUNTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: account_id
+          description: Account id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "Sell all to USD  (Permission: ACCOUNTS_WRITE, Security: SIGNED)"
+      tags:
+        - accounts
+      operationId: postVer1AccountsAccountIdSellAllToUsd
+  "/ver1/accounts/{account_id}/sell_all_to_btc":
+    post:
+      description: "Sell all to BTC  (Permission: ACCOUNTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: account_id
+          description: Account id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "Sell all to BTC  (Permission: ACCOUNTS_WRITE, Security: SIGNED)"
+      tags:
+        - accounts
+      operationId: postVer1AccountsAccountIdSellAllToBtc
+  "/ver1/accounts/{account_id}/load_balances":
+    post:
+      description: "Load balances for specified exchange  (Permission: ACCOUNTS_READ, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: account_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "Load balances for specified exchange  (Permission: ACCOUNTS_READ, Security: SIGNED)"
+      tags:
+        - accounts
+      operationId: postVer1AccountsAccountIdLoadBalances
+  "/ver1/accounts/{account_id}/rename":
+    post:
+      description: "Rename exchange connection  (Permission: ACCOUNTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: account_id
+          description: Account id
+          type: integer
+          format: int32
+          required: true
+        - in: formData
+          name: name
+          type: string
+          required: true
+      responses:
+        "201":
+          description: "Rename exchange connection  (Permission: ACCOUNTS_WRITE, Security: SIGNED)"
+      tags:
+        - accounts
+      operationId: postVer1AccountsAccountIdRename
+  "/ver1/accounts/{account_id}/pie_chart_data":
+    post:
+      description: "Information aboutl all user balances on specified exchange in pretty for pie chart format (Permission: ACCOUNTS_READ, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: account_id
+          description: Account id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "Information aboutl all user balances on specified exchange in pretty for pie chart format (Permission: ACCOUNTS_READ, Security: SIGNED)"
+      tags:
+        - accounts
+      operationId: postVer1AccountsAccountIdPieChartData
+  "/ver1/accounts/{account_id}/account_table_data":
+    post:
+      description: "Information about all user balances on specified exchange  (Permission: ACCOUNTS_READ, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: account_id
+          description: Account id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "Information about all user balances on specified exchange  (Permission: ACCOUNTS_READ, Security: SIGNED)"
+      tags:
+        - accounts
+      operationId: postVer1AccountsAccountIdAccountTableData
+  "/ver1/accounts/{account_id}/remove":
+    post:
+      description: "Remove exchange connection  (Permission: ACCOUNTS_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: account_id
+          description: Account id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "Remove exchange connection  (Permission: ACCOUNTS_WRITE, Security: SIGNED)"
+      tags:
+        - accounts
+      operationId: postVer1AccountsAccountIdRemove
+  /ver1/smart_trades/create_simple_sell:
+    post:
+      description: "Create SimpleSell (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: account_id
+          description: id from GET /ver1/accounts
+          type: integer
+          format: int32
+          required: true
+        - in: formData
+          name: pair
+          type: string
+          required: true
+        - in: formData
+          name: units_to_buy
+          description: Amount of units to buy
+          type: number
+          format: double
+          required: true
+        - in: formData
+          name: buy_price
+          type: number
+          format: double
+          required: true
+        - in: formData
+          name: conditional_limit_price
+          description: Order price for conditional SimpleSell with limit order
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: buy_method
+          type: string
+          default: limit
+          enum:
+            - limit
+            - market
+            - conditional
+          required: true
+      responses:
+        "201":
+          description: "Create SimpleSell (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      tags:
+        - smart_trades
+      operationId: postVer1SmartTradesCreateSimpleSell
+  /ver1/smart_trades/create_simple_buy:
+    post:
+      description: "Create SimpleBuy (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: account_id
+          description: id from GET /ver1/accounts
+          type: integer
+          format: int32
+          required: true
+        - in: formData
+          name: pair
+          type: string
+          required: true
+        - in: formData
+          name: units_to_buy
+          description: Amount of units to buy
+          type: number
+          format: double
+          required: true
+        - in: formData
+          name: buy_price
+          type: number
+          format: double
+          required: true
+        - in: formData
+          name: conditional_limit_price
+          description: Order price for conditional SimpleBuy with limit order
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: buy_method
+          type: string
+          default: limit
+          enum:
+            - limit
+            - market
+            - conditional
+          required: true
+      responses:
+        "201":
+          description: "Create SimpleBuy (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      tags:
+        - smart_trades
+      operationId: postVer1SmartTradesCreateSimpleBuy
+  /ver1/smart_trades/create_smart_sell:
+    post:
+      description: "Create SmartSale (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: account_id
+          description: id from GET /ver1/accounts
+          type: integer
+          format: int32
+          required: true
+        - in: formData
+          name: pair
+          type: string
+          required: true
+        - in: formData
+          name: units_to_buy
+          description: Bought amount
+          type: number
+          format: double
+          required: true
+        - in: formData
+          name: average_buy_price
+          description: Bought price
+          type: number
+          format: double
+          required: true
+        - in: formData
+          name: take_profit_enabled
+          type: boolean
+          required: true
+        - in: formData
+          name: take_profit_type
+          description: "Required if take_profit_enabled. classic - common take profit, step_sell - step sell take profit"
+          type: string
+          enum:
+            - classic
+            - step_sell
+          required: false
+        - in: formData
+          name: take_profit_price_condition
+          description: Required if take_profit_type = classic
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: take_profit_percentage_condition
+          description: Required if take_profit_type = classic AND trailing_buy_enabled. Must be positive
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: take_profit_step_orders
+          description: "Required if take_profit_type = step_sell. 4 steps max. Format: [{percent: 50, price: 100(or price_percentage = 20), price_method: bid,ask,last}, ...]"
+          type: array
+          items:
+            type: json
+          required: true
+        - in: formData
+          name: "take_profit_step_orders[percent]"
+          description: Required if take_profit_step_orders
+          type: array
+          items:
+            type: number
+            format: float
+          required: true
+        - in: formData
+          name: "take_profit_step_orders[price]"
+          description: Required if take_profit_step_orders
+          type: array
+          items:
+            type: number
+            format: double
+          required: false
+        - in: formData
+          name: "take_profit_step_orders[price_method]"
+          description: Required if take_profit_step_orders
+          type: array
+          items:
+            type: string
+            enum:
+              - bid
+              - ask
+              - last
+            default: bid
+          required: true
+        - in: formData
+          name: "take_profit_step_orders[price_percentage]"
+          description: Required if take_profit_step_orders AND trailing_buy_enabled. Must be positive
+          type: array
+          items:
+            type: number
+            format: float
+          required: false
+        - in: formData
+          name: take_profit_price_method
+          description: "Price type for take profit(bid,asl,last)"
+          type: string
+          default: bid
+          enum:
+            - bid
+            - ask
+            - last
+          required: false
+        - in: formData
+          name: take_profit_sell_method
+          type: string
+          default: market
+          enum:
+            - market
+            - limit
+          required: false
+        - in: formData
+          name: take_profit_sell_order_price
+          description: Required if limit
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: trailing_take_profit
+          type: boolean
+          required: false
+        - in: formData
+          name: trailing_take_profit_step
+          description: require if trailing_take_profit
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: stop_loss_enabled
+          type: boolean
+          required: true
+        - in: formData
+          name: stop_loss_price_condition
+          description: Required if stop_loss_enabled
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: stop_loss_percentage_condition
+          description: Required if stop_loss_enabled AND trailing_buy_enabled. Must be negative
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: stop_loss_price_method
+          description: Price type for stop loss
+          type: string
+          default: bid
+          enum:
+            - bid
+            - ask
+            - last
+          required: false
+        - in: formData
+          name: stop_loss_sell_method
+          type: string
+          default: market
+          enum:
+            - market
+            - limit
+          required: false
+        - in: formData
+          name: stop_loss_sell_order_price
+          description: Required if limit
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: trailing_stop_loss
+          type: boolean
+          required: false
+        - in: formData
+          name: stop_loss_timeout_enabled
+          type: boolean
+          required: false
+        - in: formData
+          name: stop_loss_timeout_seconds
+          description: Timeout in seconds
+          type: integer
+          format: int32
+          default: 300
+          required: false
+        - in: formData
+          name: note
+          type: string
+          required: false
+      responses:
+        "201":
+          description: "Create SmartSale (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      tags:
+        - smart_trades
+      operationId: postVer1SmartTradesCreateSmartSell
+  /ver1/smart_trades/create_smart_cover:
+    post:
+      description: "Create SmartCover (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: account_id
+          description: id from GET /ver1/accounts
+          type: integer
+          format: int32
+          required: true
+        - in: formData
+          name: pair
+          type: string
+          required: true
+        - in: formData
+          name: units_to_buy
+          description: Amount of units to buy
+          type: number
+          format: double
+          required: true
+        - in: formData
+          name: buy_price
+          type: number
+          format: double
+          required: true
+        - in: formData
+          name: conditional_limit_price
+          description: Order price for conditional SmartCover with limit order
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: buy_method
+          type: string
+          default: limit
+          enum:
+            - limit
+            - market
+            - conditional
+          required: false
+        - in: formData
+          name: trailing_buy_enabled
+          type: boolean
+          required: false
+        - in: formData
+          name: trailing_buy_step
+          description: Required if trailing_buy_enabled
+          type: number
+          format: float
+          default: 5
+          required: false
+        - in: formData
+          name: take_profit_enabled
+          type: boolean
+          required: true
+        - in: formData
+          name: take_profit_type
+          description: "Required if take_profit_enabled. classic - common take profit, step_sell - step sell take profit"
+          type: string
+          enum:
+            - classic
+            - step_sell
+          required: false
+        - in: formData
+          name: take_profit_price_condition
+          description: Required if take_profit_type = classic
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: take_profit_percentage_condition
+          description: Required if take_profit_type = classic AND trailing_buy_enabled. Must be negative
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: take_profit_step_orders
+          description: "Required if take_profit_type = step_sell. 4 steps max. Format: [{percent: 50, price: 100(or price_percentage = 20), price_method: bid,ask,last}, ...]"
+          type: array
+          items:
+            type: json
+          required: true
+        - in: formData
+          name: "take_profit_step_orders[percent]"
+          description: Required if take_profit_step_orders
+          type: array
+          items:
+            type: number
+            format: float
+          required: true
+        - in: formData
+          name: "take_profit_step_orders[price]"
+          description: Required if take_profit_step_orders
+          type: array
+          items:
+            type: number
+            format: double
+          required: false
+        - in: formData
+          name: "take_profit_step_orders[price_method]"
+          description: Required if take_profit_step_orders
+          type: array
+          items:
+            type: string
+            enum:
+              - bid
+              - ask
+              - last
+            default: bid
+          required: true
+        - in: formData
+          name: "take_profit_step_orders[price_percentage]"
+          description: Required if take_profit_step_orders AND trailing_buy_enabled. Must be negative
+          type: array
+          items:
+            type: number
+            format: float
+          required: false
+        - in: formData
+          name: take_profit_price_method
+          description: Price type for take profit
+          type: string
+          default: bid
+          enum:
+            - bid
+            - ask
+            - last
+          required: false
+        - in: formData
+          name: take_profit_sell_method
+          type: string
+          default: market
+          enum:
+            - market
+            - limit
+          required: false
+        - in: formData
+          name: take_profit_sell_order_price
+          description: Required if limit
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: trailing_take_profit
+          type: boolean
+          required: false
+        - in: formData
+          name: trailing_take_profit_step
+          description: require if trailing_take_profit
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: stop_loss_enabled
+          type: boolean
+          required: true
+        - in: formData
+          name: stop_loss_price_condition
+          description: Required if stop_loss_enabled
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: stop_loss_percentage_condition
+          description: Required if stop_loss_enabled AND trailing_buy_enabled. Must Be positive
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: stop_loss_price_method
+          description: Price type for stop loss
+          type: string
+          default: bid
+          enum:
+            - bid
+            - ask
+            - last
+          required: false
+        - in: formData
+          name: stop_loss_sell_method
+          type: string
+          default: market
+          enum:
+            - market
+            - limit
+          required: false
+        - in: formData
+          name: stop_loss_sell_order_price
+          description: Required if limit
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: trailing_stop_loss
+          type: boolean
+          required: false
+        - in: formData
+          name: stop_loss_timeout_enabled
+          type: boolean
+          required: false
+        - in: formData
+          name: stop_loss_timeout_seconds
+          description: timeout in seconds
+          type: integer
+          format: int32
+          default: 300
+          required: false
+        - in: formData
+          name: note
+          type: string
+          required: false
+      responses:
+        "201":
+          description: "Create SmartCover (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      tags:
+        - smart_trades
+      operationId: postVer1SmartTradesCreateSmartCover
+  /ver1/smart_trades/create_smart_trade:
+    post:
+      description: "Create SmartTrade (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: account_id
+          description: id from GET /ver1/accounts
+          type: integer
+          format: int32
+          required: true
+        - in: formData
+          name: pair
+          type: string
+          required: true
+        - in: formData
+          name: units_to_buy
+          description: Amount of units to buy
+          type: number
+          format: double
+          required: true
+        - in: formData
+          name: buy_price
+          type: number
+          format: double
+          required: true
+        - in: formData
+          name: conditional_limit_price
+          description: Order price for conditional SmartTrade with limit order
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: buy_method
+          type: string
+          default: limit
+          enum:
+            - limit
+            - market
+            - conditional
+          required: false
+        - in: formData
+          name: trailing_buy_enabled
+          type: boolean
+          required: false
+        - in: formData
+          name: trailing_buy_step
+          description: Required if trailing_buy_enabled
+          type: number
+          format: float
+          default: 5
+          required: false
+        - in: formData
+          name: take_profit_enabled
+          type: boolean
+          required: true
+        - in: formData
+          name: take_profit_type
+          description: "Required if take_profit_enabled. classic - common take profit, step_sell - step sell take profit"
+          type: string
+          enum:
+            - classic
+            - step_sell
+          required: false
+        - in: formData
+          name: take_profit_price_condition
+          description: Required if take_profit_type = classic
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: take_profit_percentage_condition
+          description: Required if take_profit_type = classic AND trailing_buy_enabled. Must be positive
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: take_profit_step_orders
+          description: "Required if take_profit_type = step_sell. 4 steps max. Format: [{percent: 50, price: 100(or price_percentage = 20), price_method: bid,ask,last}, ...]"
+          type: array
+          items:
+            type: json
+          required: true
+        - in: formData
+          name: "take_profit_step_orders[percent]"
+          description: Required if take_profit_step_orders
+          type: array
+          items:
+            type: number
+            format: float
+          required: true
+        - in: formData
+          name: "take_profit_step_orders[price]"
+          description: Required if take_profit_step_orders
+          type: array
+          items:
+            type: number
+            format: double
+          required: false
+        - in: formData
+          name: "take_profit_step_orders[price_method]"
+          description: Required if take_profit_step_orders
+          type: array
+          items:
+            type: string
+            enum:
+              - bid
+              - ask
+              - last
+            default: bid
+          required: true
+        - in: formData
+          name: "take_profit_step_orders[price_percentage]"
+          description: Required if take_profit_step_orders AND trailing_buy_enabled. Must be positive
+          type: array
+          items:
+            type: number
+            format: float
+          required: false
+        - in: formData
+          name: take_profit_price_method
+          description: Price type for take profit
+          type: string
+          default: bid
+          enum:
+            - bid
+            - ask
+            - last
+          required: false
+        - in: formData
+          name: take_profit_sell_method
+          type: string
+          default: market
+          enum:
+            - market
+            - limit
+          required: false
+        - in: formData
+          name: take_profit_sell_order_price
+          description: Required if limit
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: trailing_take_profit
+          type: boolean
+          required: false
+        - in: formData
+          name: trailing_take_profit_step
+          description: require if trailing_take_profit
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: stop_loss_enabled
+          type: boolean
+          required: true
+        - in: formData
+          name: stop_loss_price_condition
+          description: Required if stop_loss_enabled
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: stop_loss_percentage_condition
+          description: Required if stop_loss_enabled AND trailing_buy_enabled. Must be negative
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: stop_loss_price_method
+          description: Price type for stop loss
+          type: string
+          default: bid
+          enum:
+            - bid
+            - ask
+            - last
+          required: false
+        - in: formData
+          name: stop_loss_sell_method
+          type: string
+          default: market
+          enum:
+            - market
+            - limit
+          required: false
+        - in: formData
+          name: stop_loss_sell_order_price
+          description: Required if limit
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: trailing_stop_loss
+          type: boolean
+          required: false
+        - in: formData
+          name: stop_loss_timeout_enabled
+          type: boolean
+          required: false
+        - in: formData
+          name: stop_loss_timeout_seconds
+          description: timeout in seconds
+          type: integer
+          format: int32
+          default: 300
+          required: false
+        - in: formData
+          name: note
+          type: string
+          required: false
+      responses:
+        "201":
+          description: "Create SmartTrade (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      tags:
+        - smart_trades
+      operationId: postVer1SmartTradesCreateSmartTrade
+  /ver1/smart_trades:
+    get:
+      description: "Get SmartTrade history (Permission: SMART_TRADE_READ, Security: SIGNED)"
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: limit
+          description: Limit records
+          type: integer
+          format: int32
+          required: false
+        - in: query
+          name: offset
+          description: Offset records
+          type: integer
+          format: int32
+          required: false
+        - in: query
+          name: account_id
+          description: Account to show smart_trades on. Pass null (default) - show all
+          type: integer
+          format: int32
+          required: false
+        - in: query
+          name: scope
+          description: "active - show only active trades, finished - history of closed trades, cancelled - cancelled trades, failed - failed trades, any other value or null (default) - all trades"
+          type: string
+          required: false
+        - in: query
+          name: type
+          description: "SmartTrade::SmartSale , SmartTrade::Classic , SmartTrade::ConditionalBuy"
+          type: string
+          required: false
+        - in: query
+          name: order
+          type: string
+          default: created_at
+          enum:
+            - created_at
+            - closed_at
+          required: false
+      responses:
+        "200":
+          description: "Get SmartTrade history (Permission: SMART_TRADE_READ, Security: SIGNED)"
+      tags:
+        - smart_trades
+      operationId: getVer1SmartTrades
+  "/ver1/smart_trades/{smart_trade_id}/cancel_order":
+    post:
+      description: "Manual cancel order (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: step_id
+          description: SmartTrade step id to cancel
+          type: string
+          required: true
+        - in: path
+          name: smart_trade_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "Manual cancel order (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      tags:
+        - smart_trades
+      operationId: postVer1SmartTradesSmartTradeIdCancelOrder
+  "/ver1/smart_trades/{smart_trade_id}/add_funds":
+    post:
+      description: "Smart Trade add funds (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: quantity
+          description: buy order quantity
+          type: number
+          format: double
+          required: true
+        - in: formData
+          name: is_market
+          description: "true - use MARKET order, false - use LIMIT order"
+          type: boolean
+          required: true
+        - in: formData
+          name: response_type
+          type: string
+          default: empty
+          enum:
+            - smart_trade
+            - empty
+            - order
+            - step
+          required: false
+        - in: formData
+          name: rate
+          description: buy order rate. Required if LIMIT order used
+          type: number
+          format: double
+          required: true
+        - in: path
+          name: smart_trade_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "Smart Trade add funds (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      tags:
+        - smart_trades
+      operationId: postVer1SmartTradesSmartTradeIdAddFunds
+  "/ver1/smart_trades/{smart_trade_id}/step_panic_sell":
+    post:
+      description: "Step panic sell (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: step_id
+          type: integer
+          format: int32
+          required: true
+        - in: path
+          name: smart_trade_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "Step panic sell (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      tags:
+        - smart_trades
+      operationId: postVer1SmartTradesSmartTradeIdStepPanicSell
+  "/ver1/smart_trades/{smart_trade_id}/update":
+    patch:
+      description: "Edit SmartTrade/SmartSale/SmartCover (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: buy_price
+          description: Available if Conditional SmartTrade
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: conditional_limit_price
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: average_buy_price
+          description: Available if SmartSale
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: trailing_buy_enabled
+          description: Available if Conditional SmartTrade
+          type: boolean
+          required: false
+        - in: formData
+          name: trailing_buy_step
+          description: Available if trailing_buy_enabled
+          type: number
+          format: float
+          required: false
+        - in: formData
+          name: take_profit_enabled
+          type: boolean
+          required: true
+        - in: formData
+          name: take_profit_type
+          description: "Required if take_profit_enabled. classic - common take profit, step_sell - step sell take profit"
+          type: string
+          enum:
+            - classic
+            - step_sell
+          required: false
+        - in: formData
+          name: take_profit_price_condition
+          description: Required if take_profit_type = classic
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: take_profit_percentage_condition
+          description: Required if take_profit_type = classic AND trailing_buy_enabled
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: take_profit_step_orders
+          description: |-
+            Available if take_profit_type = step_sell. If null - steps won't be changed.
+                                                                In order to apply changes - send a new set of steps, which contains new and previous steps that were not edited.
+                                                                Position must be unique(for new and previous steps in SmartTrade scope) and greater then 0
+          type: array
+          items:
+            type: json
+          required: true
+        - in: formData
+          name: "take_profit_step_orders[percent]"
+          description: Required if take_profit_step_orders
+          type: array
+          items:
+            type: number
+            format: float
+          required: true
+        - in: formData
+          name: "take_profit_step_orders[price]"
+          description: Required if take_profit_step_orders
+          type: array
+          items:
+            type: number
+            format: double
+          required: false
+        - in: formData
+          name: "take_profit_step_orders[position]"
+          description: Required if take_profit_step_orders
+          type: array
+          items:
+            type: integer
+            format: int32
+          required: true
+        - in: formData
+          name: "take_profit_step_orders[price_method]"
+          description: Required if take_profit_step_orders
+          type: array
+          items:
+            type: string
+            enum:
+              - bid
+              - ask
+              - last
+            default: bid
+          required: true
+        - in: formData
+          name: "take_profit_step_orders[price_percentage]"
+          description: Required if take_profit_step_orders AND trailing_buy_enabled
+          type: array
+          items:
+            type: number
+            format: float
+          required: false
+        - in: formData
+          name: take_profit_price_method
+          description: "Price type for take profit(bid,asl,last)"
+          type: string
+          default: bid
+          enum:
+            - bid
+            - ask
+            - last
+          required: false
+        - in: formData
+          name: take_profit_sell_method
+          type: string
+          default: market
+          enum:
+            - market
+            - limit
+          required: false
+        - in: formData
+          name: take_profit_sell_order_price
+          description: Required if limit
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: trailing_take_profit
+          type: boolean
+          required: false
+        - in: formData
+          name: trailing_take_profit_step
+          description: require if trailing_take_profit
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: stop_loss_enabled
+          type: boolean
+          required: true
+        - in: formData
+          name: stop_loss_price_condition
+          description: Required if stop_loss_enabled
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: stop_loss_percentage_condition
+          description: Required if stop_loss_enabled AND trailing_buy_enabled
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: stop_loss_price_method
+          description: Price type for stop loss
+          type: string
+          default: bid
+          enum:
+            - bid
+            - ask
+            - last
+          required: false
+        - in: formData
+          name: stop_loss_sell_method
+          type: string
+          default: market
+          enum:
+            - market
+            - limit
+          required: false
+        - in: formData
+          name: stop_loss_sell_order_price
+          description: Required if limit
+          type: number
+          format: double
+          required: false
+        - in: formData
+          name: trailing_stop_loss
+          type: boolean
+          required: false
+        - in: formData
+          name: stop_loss_timeout_enabled
+          type: boolean
+          required: false
+        - in: formData
+          name: stop_loss_timeout_seconds
+          description: Timeout in seconds
+          type: integer
+          format: int32
+          default: 300
+          required: false
+        - in: formData
+          name: note
+          type: string
+          required: false
+        - in: path
+          name: smart_trade_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "200":
+          description: "Edit SmartTrade/SmartSale/SmartCover (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      tags:
+        - smart_trades
+      operationId: patchVer1SmartTradesSmartTradeIdUpdate
+  "/ver1/smart_trades/{smart_trade_id}/cancel":
+    post:
+      description: "Cancel SmartTrade (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: smart_trade_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "Cancel SmartTrade (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      tags:
+        - smart_trades
+      operationId: postVer1SmartTradesSmartTradeIdCancel
+  "/ver1/smart_trades/{smart_trade_id}/panic_sell":
+    post:
+      description: "Sell currency immediately (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: smart_trade_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "Sell currency immediately (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      tags:
+        - smart_trades
+      operationId: postVer1SmartTradesSmartTradeIdPanicSell
+  "/ver1/smart_trades/{smart_trade_id}/force_process":
+    post:
+      description: "Refresh SmartTrade state (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      produces:
+        - application/json
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: smart_trade_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "201":
+          description: "Refresh SmartTrade state (Permission: SMART_TRADE_WRITE, Security: SIGNED)"
+      tags:
+        - smart_trades
+      operationId: postVer1SmartTradesSmartTradeIdForceProcess
+  /ver1/marketplace/items:
+    get:
+      description: "All marketplace items (Permission: NONE, Security: NONE)"
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: limit
+          description: "Limit records. Max: 1_000"
+          type: integer
+          format: int32
+          default: 50
+          required: false
+        - in: query
+          name: offset
+          description: Offset records
+          type: integer
+          format: int32
+          required: false
+        - in: query
+          name: scope
+          description: paid - show only paid signal providers. free - show only free signal providers
+          type: string
+          default: all
+          enum:
+            - all
+            - paid
+            - free
+          required: false
+        - in: query
+          name: order
+          type: string
+          default: newest
+          enum:
+            - subscribers
+            - name
+            - newest
+          required: false
+        - in: query
+          name: locale
+          type: string
+          default: en
+          enum:
+            - en
+            - ru
+            - zh
+            - zh-CN
+            - cn
+            - es
+            - pt
+          required: false
+      responses:
+        "200":
+          description: "All marketplace items (Permission: NONE, Security: NONE)"
+      tags:
+        - marketplace
+      operationId: getVer1MarketplaceItems
+  "/ver1/marketplace/{item_id}/signals":
+    get:
+      description: "Marketplace Item Signals (Permission: NONE, Security: NONE)"
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: limit
+          description: "Limit records. Max: 1_000"
+          type: integer
+          format: int32
+          default: 50
+          required: false
+        - in: query
+          name: offset
+          description: Offset records
+          type: integer
+          format: int32
+          required: false
+        - in: query
+          name: order
+          type: string
+          default: date
+          enum:
+            - pair
+            - exchange
+            - signal_type
+            - date
+          required: false
+        - in: query
+          name: order_direction
+          type: string
+          default: desc
+          enum:
+            - asc
+            - desc
+          required: false
+        - in: query
+          name: locale
+          type: string
+          default: en
+          enum:
+            - en
+            - ru
+            - zh
+            - zh-CN
+            - cn
+            - es
+            - pt
+          required: false
+        - in: path
+          name: item_id
+          type: integer
+          format: int32
+          required: true
+      responses:
+        "200":
+          description: "Marketplace Item Signals (Permission: NONE, Security: NONE)"
+      tags:
+        - marketplace
+      operationId: getVer1MarketplaceItemIdSignals
+  /ver1/ping:
+    get:
+      description: "Test connectivity to the Rest API (Permission: NONE, Security: NONE)"
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: "Test connectivity to the Rest API (Permission: NONE, Security: NONE)"
+          schema:
+            $ref: "#/definitions/PongEntity"
+      tags:
+        - ping
+      operationId: getVer1Ping
+  /ver1/time:
+    get:
+      description: "Test connectivity to the Rest API and get the current server time (Permission: NONE, Security: NONE)"
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: "Test connectivity to the Rest API and get the current server time (Permission: NONE, Security: NONE)"
+          schema:
+            $ref: "#/definitions/TimeEntity"
+      tags:
+        - time
+      operationId: getVer1Time
+definitions:
+  PongEntity:
+    type: object
+    properties:
+      pong:
+        type: "'pong'"
+    description: "Test connectivity to the Rest API (Permission: NONE, Security: NONE)"
+  TimeEntity:
+    type: object
+    properties:
+      server_time:
+        type: "1525533222"
+    description: "Test connectivity to the Rest API and get the current server time (Permission: NONE, Security: NONE)"
+  DealEntity:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int32
+        example: "1"
+      type:
+        type: string
+        example: "Deal::ShortDeal"
+      bot_id:
+        type: integer
+        format: int32
+        example: "111"
+      max_safety_orders:
+        type: integer
+        format: int32
+        example: 2
+      deal_has_error:
+        type: boolean
+        example: true
+      from_currency_id:
+        type: integer
+        format: int32
+        example: 5
+        description: DEPRECATED
+      to_currency_id:
+        type: integer
+        format: int32
+        example: 10
+        description: DEPRECATED
+      account_id:
+        type: integer
+        format: int32
+        example: 121
+      active_safety_orders_count:
+        type: integer
+        format: int32
+        example: 1
+      created_at:
+        type: string
+        example: "2018-08-08 08:08:08"
+      updated_at:
+        type: string
+        example: "2018-09-09 09:09:09"
+      closed_at:
+        type: string
+        example: "2018-10-10 10:10:10"
+      finished?:
+        type: boolean
+      current_active_safety_orders_count:
+        type: integer
+        format: int32
+        example: 1
+      current_active_safety_orders:
+        type: integer
+        format: int32
+        example: 1
+        description: DEPRECATED
+      completed_safety_orders_count:
+        type: integer
+        format: int32
+        example: 2
+        description: completed safeties (not including manual)
+      completed_manual_safety_orders_count:
+        type: integer
+        format: int32
+        example: 2
+        description: completed manual safeties
+      cancellable?:
+        type: boolean
+      panic_sellable?:
+        type: boolean
+      trailing_enabled:
+        type: boolean
+        example: true
+      tsl_enabled:
+        type: boolean
+        example: true
+      stop_loss_timeout_enabled:
+        type: boolean
+        example: true
+      stop_loss_timeout_in_seconds:
+        type: integer
+        format: int32
+        example: 2
+      active_manual_safety_orders:
+        type: integer
+        format: int32
+        example: 2
+      pair:
+        type: string
+        example: "'BTC_ADA'"
+        description: "Format: QUOTE_BASE"
+      status:
+        type: string
+        example: "'failed'"
+        description: "Values: created, base_order_placed, bought, cancelled, completed, failed, panic_sell_pending, panic_sell_order_placed, panic_sold, cancel_pending, stop_loss_pending, stop_loss_finished, stop_loss_order_placed, switched, switched_take_profit, ttp_activated, ttp_order_placed, liquidated, bought_safety_pending, bought_take_profit_pending, settled"
+      take_profit:
+        type: string
+        example: "'1.23'"
+        description: Percentage
+      base_order_volume:
+        type: string
+        example: "'0.001'"
+      safety_order_volume:
+        type: string
+        example: "'0.0015'"
+      safety_order_step_percentage:
+        type: string
+        example: "'1.11'"
+      bought_amount:
+        type: string
+        example: "'1.5'"
+      bought_volume:
+        type: string
+        example: "'150'"
+      bought_average_price:
+        type: string
+        example: "'100'"
+      sold_amount:
+        type: string
+        example: "'1.5'"
+      sold_volume:
+        type: string
+        example: "'150'"
+      sold_average_price:
+        type: string
+        example: "'100'"
+      take_profit_type:
+        type: string
+        example: "'base'"
+        description: "Values: base, total"
+      final_profit:
+        type: string
+        example: "'-0.00051'"
+      martingale_coefficient:
+        type: string
+        example: "'1.2'"
+        description: Percentage
+      martingale_volume_coefficient:
+        type: string
+        example: "'1.0'"
+        description: Percentage
+      martingale_step_coefficient:
+        type: string
+        example: "'1.0'"
+        description: Percentage
+      stop_loss_percentage:
+        type: string
+        example: "'3.6'"
+      error_message:
+        type: string
+        example: "'Error placing base order'"
+      profit_currency:
+        type: string
+        example: "'quote_currency'"
+        description: "Values: quote_currency, base_currency"
+      stop_loss_type:
+        type: string
+        example: "'stop_loss'"
+        description: "Values: stop_loss, stop_loss_and_disable_bot"
+      safety_order_volume_type:
+        type: string
+        example: "'quote_currency'"
+        description: "Values: quote_currency, base_currency, percent, xbt"
+      base_order_volume_type:
+        type: string
+        example: "'base_currency,'"
+        description: "Values: quote_currency, base_currency, percent, xbt"
+      from_currency:
+        type: string
+        example: "'BTC'"
+      to_currency:
+        type: string
+        example: "'ADA'"
+      current_price:
+        type: string
+        example: "'102'"
+      take_profit_price:
+        type: string
+        example: "'105'"
+      final_profit_percentage:
+        type: string
+        example: "'4.2'"
+      actual_profit_percentage:
+        type: string
+        example: "'3.4'"
+      bot_name:
+        type: string
+        example: My bot
+      account_name:
+        type: string
+        example: My Account
+      usd_final_profit:
+        type: string
+        example: "'3.3523452'"
+      actual_profit:
+        type: string
+        example: "'0.0023'"
+      actual_usd_profit:
+        type: string
+        example: "'0.0023'"
+      failed_message:
+        type: string
+        example: Failed
+      reserved_base_coin:
+        type: string
+        example: "1.3423523"
+      reserved_second_coin:
+        type: string
+        example: "0.1412454"
+      trailing_deviation:
+        type: string
+        example: "0.14"
+      trailing_max_price:
+        type: string
+        example: "0.1412454"
+        description: "Highest price met in case of long deal, lowest price otherwise"
+      tsl_max_price:
+        type: string
+        example: "0.1412454"
+        description: "Highest price met in TSL in case of long deal, lowest price otherwise"
+      strategy:
+        type: string
+        example: "'short'"
+        description: short or long
+  BotEntity:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int32
+        example: 5
+      account_id:
+        type: integer
+        format: int32
+        example: 10
+      is_enabled:
+        type: boolean
+        example: true
+      max_safety_orders:
+        type: integer
+        format: int32
+        example: 5
+      active_safety_orders_count:
+        type: integer
+        format: int32
+        example: 2
+      pairs:
+        type: string
+        example: "['BTC_LTC', 'BTC_ETH', 'BTC_ADA']"
+        description: "Format: [QUOTE_BASE, ...]"
+      strategy_list:
+        type: string
+        example: "[{'options'=>{'time'=>'5m', 'type'=>'buy_or_strong_buy'}, 'strategy'=>'trading_view'}, ...]"
+      max_active_deals:
+        type: integer
+        format: int32
+        example: 2
+      active_deals_count:
+        type: integer
+        format: int32
+        example: 2
+      deletable?:
+        type: boolean
+        example: true
+      created_at:
+        type: string
+        example: "2018-08-08 08:08:08"
+      updated_at:
+        type: string
+        example: "2018-08-10 10:10:10"
+      trailing_enabled:
+        type: boolean
+        example: true
+      tsl_enabled:
+        type: boolean
+        example: true
+      deal_start_delay_seconds:
+        type: integer
+        format: int32
+        example: 60
+        description: Deal start delay in seconds
+      stop_loss_timeout_enabled:
+        type: boolean
+        example: true
+      stop_loss_timeout_in_seconds:
+        type: integer
+        format: int32
+        example: 2
+      disable_after_deals_count:
+        type: integer
+        format: int32
+        example: 2
+      deals_counter:
+        type: integer
+        format: int32
+        example: 2
+      allowed_deals_on_same_pair:
+        type: integer
+        format: int32
+        example: 2
+      name:
+        type: string
+        example: "'Test Bot'"
+      take_profit:
+        type: string
+        example: "'1.5'"
+        description: "'Percentage'"
+      base_order_volume:
+        type: string
+        example: "'0.002'"
+      safety_order_volume:
+        type: string
+        example: "'0.0015'"
+      safety_order_step_percentage:
+        type: string
+        example: "'1.1'"
+      take_profit_type:
+        type: string
+        example: "'base'"
+        description: "Values: base, total"
+      type:
+        type: string
+        example: "'Bot::SingleBot'"
+        description: 'Values: ["Bot::MultiBot", "Bot::SingleBot", "Bot::SwitchBot"]'
+      martingale_volume_coefficient:
+        type: string
+        example: "'1.3'"
+      martingale_step_coefficient:
+        type: string
+        example: "'0.9'"
+      stop_loss_percentage:
+        type: string
+        example: "'5.5'"
+      cooldown:
+        type: string
+        example: "'200'"
+      strategy:
+        type: integer
+        format: int32
+        example: "'long'"
+        description: "Values: long, short"
+      min_volume_btc_24h:
+        type: string
+        example: "'500.5'"
+      profit_currency:
+        type: string
+        example: "'quote_currency'"
+        description: "Values: quote_currency, base_currency"
+      min_price:
+        type: string
+        example: "'0.0245'"
+      max_price:
+        type: string
+        example: "'0.0123'"
+      stop_loss_type:
+        type: string
+        example: "'stop_loss'"
+        description: "Values: stop_loss, stop_loss_and_disable_bot"
+      safety_order_volume_type:
+        type: string
+        example: "'base_currency'"
+        description: "Values: quote_currency, base_currency, percent, xbt"
+      base_order_volume_type:
+        type: string
+        example: "'percent'"
+        description: "Values: quote_currency, base_currency, percent, xbt"
+      account_name:
+        type: string
+        example: "'My account'"
+      trailing_deviation:
+        type: string
+        example: "0.14"
+      finished_deals_profit_usd:
+        type: string
+        example: "12.14"
+      finished_deals_count:
+        type: string
+        example: "252.1"
+      leverage_type:
+        type: string
+        example: "'not_specified'"
+        description: "Values: custom, cross, not_specified"
+      leverage_custom_value:
+        type: string
+        example: "'1'"
+      start_order_type:
+        type: string
+        example: "'limit'"
+        description: "Values: limit, market"
+  AccountEntity:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int32
+        example: 12
+      auto_balance_period:
+        type: integer
+        format: int32
+        example: 12
+      auto_balance_portfolio_id:
+        type: integer
+        format: int32
+        example: 452
+      auto_balance_currency_change_limit:
+        type: integer
+        format: int32
+        example: 5
+      autobalance_enabled:
+        type: boolean
+        example: true
+      is_locked:
+        type: boolean
+        example: true
+      smart_trading_supported:
+        type: boolean
+        example: true
+      smart_selling_supported:
+        type: boolean
+        example: true
+        description: DEPRECATED. use smart_trading_supported instead
+      available_for_trading:
+        type: boolean
+        example: true
+      stats_supported:
+        type: boolean
+        example: true
+      trading_supported:
+        type: boolean
+        example: true
+      market_buy_supported:
+        type: boolean
+        example: true
+      market_sell_supported:
+        type: boolean
+        example: true
+      conditional_buy_supported:
+        type: boolean
+        example: true
+      bots_allowed:
+        type: boolean
+        example: "false"
+      bots_ttp_allowed:
+        type: boolean
+        example: "false"
+      bots_tsl_allowed:
+        type: boolean
+        example: "false"
+      multi_bots_allowed:
+        type: boolean
+        example: "false"
+      created_at:
+        type: string
+        example: "2018-08-08 08:08:08"
+      updated_at:
+        type: string
+        example: "2018-08-22 02:25:08"
+      last_auto_balance:
+        type: string
+        example: "2018-08-21 08:08:08"
+      api_key:
+        type: string
+        example: "''"
+      name:
+        type: string
+        example: "'Binance 2 '"
+      auto_balance_method:
+        type: integer
+        format: int32
+        example: "'time'"
+        description: "Values: time, currency_change"
+      auto_balance_error:
+        type: string
+        example: "'Failed to autobalance'"
+      lock_reason:
+        type: string
+        example: "'API key is invalid'"
+      btc_amount:
+        type: string
+        example: "'0.01134219'"
+      usd_amount:
+        type: string
+        example: "'70.93146245'"
+      day_profit_btc:
+        type: string
+        example: "'-0.00006'"
+      day_profit_usd:
+        type: string
+        example: "'-0.02147'"
+      day_profit_btc_percentage:
+        type: string
+        example: "'-0.26'"
+      day_profit_usd_percentage:
+        type: string
+        example: "'-1.23'"
+      btc_profit:
+        type: string
+        example: "'0.0001625'"
+        description: Month period
+      usd_profit:
+        type: string
+        example: "'5.05764787'"
+        description: Month period
+      usd_profit_percentage:
+        type: string
+        example: "'6.25'"
+        description: Month period
+      btc_profit_percentage:
+        type: string
+        example: "'2.36'"
+        description: Month period
+      total_btc_profit:
+        type: string
+        example: "'0.0012456'"
+      total_usd_profit:
+        type: string
+        example: "'6.123181'"
+      pretty_display_type:
+        type: string
+        example: "'BittresxAccount'"
+      address:
+        type: string
+        example: "'0xe00000dded00bbb08725d77777777ff070aa7aa7'"
+  SmartTradeEntity:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int32
+        example: 1
+      account_id:
+        type: integer
+        format: int32
+        example: 68
+      trailing_stop_loss:
+        type: boolean
+        example: true
+      from_currency_id:
+        type: integer
+        format: int32
+        example: 10
+      trailing_stop_loss_condition_percentage:
+        type: integer
+        format: int32
+        example: 2
+      trailing_take_profit:
+        type: boolean
+        example: true
+      stop_loss_enabled:
+        type: boolean
+        example: true
+      panic_sell_market_order_id:
+        type: integer
+        format: int32
+        example: 756
+      take_profit_enabled:
+        type: boolean
+        example: true
+      trailing_buy_enabled:
+        type: boolean
+        example: true
+      stop_loss_timeout_seconds:
+        type: integer
+        format: int32
+        example: 300
+      stop_loss_timeout_enabled:
+        type: boolean
+        example: true
+      panic_sellable:
+        type: boolean
+        example: "false"
+      editable:
+        type: boolean
+        example: true
+      finished:
+        type: boolean
+        example: "false"
+      cancellable:
+        type: boolean
+        example: "false"
+      created_at:
+        type: string
+        example: "2018-08-08 08:08:08"
+      updated_at:
+        type: string
+        example: "2018-09-09 09:09:09"
+      trailing_stop_loss_last_price_updated_at:
+        type: string
+        example: "2018-09-09 09:09:09"
+      trailing_take_profit_last_price_updated_at:
+        type: string
+        example: "2018-09-09 09:09:09"
+      closed_at:
+        type: string
+        example: "2018-10-10 10:10:10"
+      status:
+        type: string
+        example: "'bought'"
+        description: "Values: buy_order_placed, bought, stop_loss_order_placed, take_profit_order_placed, stop_loss_finished, take_profit_finished, cancelled, failed, panic_sell_order_placed, panic_sell_finished, trailing_take_profit_activated, conditional_order_waiting_price, trailing_buy_activated, simple_trade_finished"
+      take_profit_price_condition:
+        type: string
+        example: "'105.125'"
+      take_profit_price_order:
+        type: string
+        example: "'106.01'"
+      stop_loss_price_condition:
+        type: string
+        example: "'95.84'"
+      stop_loss_price_order:
+        type: string
+        example: "'94.88'"
+      units_to_buy:
+        type: string
+        example: "'1.0525'"
+      buy_price:
+        type: string
+        example: "'101.12'"
+      total:
+        type: string
+        example: "'106.4288'"
+      average_buy_price:
+        type: string
+        example: "'100.3'"
+      average_sell_price:
+        type: string
+        example: "'105.5'"
+      error_message:
+        type: string
+        example: "'order cancelled'"
+      trailing_take_profit_step:
+        type: string
+        example: "'2.3'"
+        description: Percentage
+      type:
+        type: string
+        example: "'SmartTrade::Classic'"
+        description: "Values: SmartTrade::Classic, SmartTrade::ConditionalBuy, SmartTrade::SmartSale, SmartTrade::SellBuyBack, SmartTrade::ConditionalSell, SmartTrade::SimpleBuy, SmartTrade::ConditionalSimpleBuy, SmartTrade::ConditionalSimpleSell, SmartTrade::SimpleSell"
+      stop_loss_price_method:
+        type: string
+        example: "'bid'"
+        description: "Values: bid, ask, last"
+      take_profit_price_method:
+        type: string
+        example: "'ask'"
+        description: "Values: bid, ask, last"
+      trailing_stop_loss_last_price:
+        type: string
+        example: "'94.545'"
+      trailing_take_profit_last_price:
+        type: string
+        example: "'106.242'"
+      note:
+        type: string
+        example: "'Best pair'"
+      buy_method:
+        type: string
+        example: "'market'"
+        description: 'Values: ["limit", "market", "conditional"]'
+      take_profit_type:
+        type: string
+        example: "'step_sell'"
+        description: "Values: classic, step_sell"
+      stop_loss_type:
+        type: string
+        example: "'classic'"
+        description: "Values: classic, step_sell"
+      stop_loss_sell_method:
+        type: string
+        example: "'limit'"
+        description: "Values: market, limit"
+      take_profit_sell_method:
+        type: string
+        example: "'market'"
+        description: "Values: market, limit"
+      take_profit_sell_order_price:
+        type: string
+        example: "'105.12'"
+      stop_loss_sell_order_price:
+        type: string
+        example: "'96.12'"
+      trailing_buy_step:
+        type: string
+        example: "'1.5'"
+      profit_percentage:
+        type: string
+        example: "'15.26'"
+      current_price:
+        type: string
+        example: "'103.26'"
+      account_market:
+        type: string
+        example: "'BinanceMarket'"
+      account_name:
+        type: string
+        example: "'my acc'"
+      from_currency_code:
+        type: string
+        example: "'ETH'"
+      from_currency_name:
+        type: string
+        example: "'Ethereum'"
+      from_currency_display_name:
+        type: string
+        example: "'Ethereum (ETH)'"
+      to_currency_code:
+        type: string
+        example: "'BTC'"
+      to_currency_name:
+        type: string
+        example: "'Bitcoin'"
+      to_currency_display_name:
+        type: string
+        example: "'Bitcoin (BTC)'"
+      usd_profit:
+        type: string
+        example: "'-0.5'"
+      smart_trade_steps:
+        $ref: "#/definitions/SmartTradeStepEntity"
+      take_profit_steps:
+        $ref: "#/definitions/SmartTradeStepEntity"
+      stop_loss_steps:
+        $ref: "#/definitions/SmartTradeStepEntity"
+      buy_steps:
+        $ref: "#/definitions/SmartTradeStepEntity"
+  SmartTradeStepEntity:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int32
+        example: 1
+      editable:
+        type: boolean
+        example: true
+      position:
+        type: integer
+        format: int32
+        example: 1
+        description: For TP type = step_sell
+      order_id:
+        type: integer
+        format: int32
+        example: 128
+      smart_trade_id:
+        type: integer
+        format: int32
+        example: 505
+      is_panic_sell:
+        type: boolean
+        example: "false"
+      created_at:
+        type: string
+        example: "2018-09-09 09:09:09"
+      updated_at:
+        type: string
+        example: "2018-10-10 10:11:12"
+      trailing_last_pirce_updated_at:
+        type: string
+        example: "2018-10-10 10:12:12"
+        description: DEPRECATED
+      trailing_last_price_updated_at:
+        type: string
+        example: "2018-10-10 10:12:12"
+      type:
+        type: string
+        example: "'SmartTradeStep::TakeProfitStep'"
+        description: "SmartTradeStep::TrailingStopLossStep, SmartTradeStep::StopLossStep, SmartTradeStep::TrailingStopLossBuyStep, SmartTradeStep::StopLossBuyStep, SmartTradeStep::TakeProfitStep, SmartTradeStep::TrailingTakeProfitStep, SmartTradeStep::TakeProfitBuyStep, SmartTradeStep::TrailingTakeProfitBuyStep"
+      price:
+        type: string
+        example: "'102.15'"
+      average_result_price:
+        type: string
+        example: "'103.1'"
+      deviation_condition:
+        type: string
+        example: "'1.4'"
+      price_method:
+        type: string
+        example: "'bid'"
+        description: "bid, ask ,last"
+      trailing_last_pirce:
+        type: string
+        example: "'103.4'"
+        description: DEPRECATED
+      trailing_last_price:
+        type: string
+        example: "'103.4'"
+      sell_method:
+        type: string
+        example: "'market'"
+        description: "Values: market, limit"
+      sell_order_price:
+        type: string
+        example: "'103.5'"
+      percent:
+        type: string
+        example: "'25.6'"
+      pair:
+        type: string
+        example: "'BTC_LTC'"
+        description: QUOTE_BASE
+      initial_amount:
+        type: string
+        example: "'50'"
+      initial_total:
+        type: string
+        example: "'5107.5'"
+      actual_amount:
+        type: string
+        example: "'48'"
+      actual_total:
+        type: string
+        example: "'4903.2'"
+      status:
+        type: string
+        example: "'enqueued'"
+        description: "Values: idle, enqueued, need_check, processed, skipped, failed, cancelled, panic_sold"
+      market_order_id:
+        type: string
+        example: 606
+      market_class:
+        type: string
+        example: "'BinanceMarket'"
+      price_percentage:
+        type: string
+        example: "'10.2'"

@@ -22,6 +22,7 @@ fn extract_request_from_openapi(path: String, data: ReferenceOr<PathItem>) -> Ve
     if let ReferenceOr::Item(data) = data {
         data.get.map(|operation| requests.push(openapi_operation_to_request(path.clone(), Method::Get, operation)));
         data.put.map(|operation| requests.push(openapi_operation_to_request(path.clone(), Method::Put, operation)));
+        data.post.map(|operation| requests.push(openapi_operation_to_request(path.clone(), Method::Post, operation)));
     };
 
     requests
