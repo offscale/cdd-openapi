@@ -1,5 +1,7 @@
 use jsonrpc_ws_server::*;
 use jsonrpc_ws_server::jsonrpc_core::*;
+use serde_json::value::Value;
+use jsonrpc_core::types::error::Error;
 use crate::models::*;
 
 fn rpc_error(message: &str) -> jsonrpc_core::types::error::Error {
@@ -31,9 +33,6 @@ pub fn start_server() {
 
 	server.wait().unwrap()
 }
-
-use serde_json::value::Value;
-use jsonrpc_core::types::error::Error;
 
 fn template(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
     log(format!("-> template: {:?}", params));
@@ -86,7 +85,7 @@ fn parse(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
     let request: CodeRequest = params.parse().map_err(|e| rpc_error(&format!("{}", e)))?;
 
     crate::parser::parse_yaml_to_project(&request.code)
-        .map(|response| serde_json::json!(response))
+        .map(|project: cdd::Project| serde_json::json!({"project": project}))
         .map_err(|e| rpc_error(&format!("{}", e)))
 }
 
