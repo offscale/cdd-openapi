@@ -1,5 +1,5 @@
-use serde::{Deserialize};
 use cdd::*;
+use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct ParseRequest {

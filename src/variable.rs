@@ -25,7 +25,12 @@ pub enum VariableType {
     ComplexType(String),
 }
 
-pub(crate) fn extract_variable_from_openapi(class_name: &str, var_name: &str, schema: openapiv3::Schema, optional: bool) -> Option<Variable> {
+pub(crate) fn extract_variable_from_openapi(
+    class_name: &str,
+    var_name: &str,
+    schema: openapiv3::Schema,
+    optional: bool,
+) -> Option<Variable> {
     if let openapiv3::SchemaKind::Type(schema_type) = schema.schema_kind {
         let variable_type = match schema_type {
             openapiv3::Type::String(_) => VariableType::StringType,
@@ -37,18 +42,16 @@ pub(crate) fn extract_variable_from_openapi(class_name: &str, var_name: &str, sc
                 return None; // fix
             }
             openapiv3::Type::Boolean {} => VariableType::BoolType,
-            _ => {
-            return None
-            }
+            _ => return None,
         };
 
         Some(Variable {
             name: var_name.to_string(),
             optional,
             value: None,
-            variable_type: variable_type
+            variable_type: variable_type,
         })
     } else {
-        return None
+        return None;
     }
 }
