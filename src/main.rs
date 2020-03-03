@@ -8,6 +8,9 @@ mod template;
 mod util;
 mod variable;
 
-fn main() {
-    rpc::start_server();
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let server = "127.0.0.1:7777";
+    println!("Starting server on {}...", server);
+    rpc::start(server);
+    Ok(())
 }

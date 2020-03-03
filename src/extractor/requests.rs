@@ -36,9 +36,34 @@ fn openapi_operation_to_request(path: String, method: Method, operation: Operati
         path,
         params: extract_params_from_openapi(operation.parameters).into_iter().map(|v| Box::new(v)).collect(),
         method,
-        response_type: "-".to_string(),
-        error_type: "-".to_string(),
+        response_type: extract_response_type_from_openapi(operation.responses),
+        error_type: None,
     }
+}
+
+fn extract_response_type_from_openapi(responses: Responses) -> Option<Box<VariableType>> {
+    if let Some(response) = responses.default {
+        if let ReferenceOr::Item(response) = response {
+            for (name, content) in response.content {
+                if let Some(reference) = content.schema {
+                    if let ReferenceOr::Reference{ reference } = reference {
+                        if let Some(complex_type) = reference.split("/").last() {
+                            return Some(Box::new(
+                                VariableType::ComplexType(complex_type.into())
+                            ));
+                        } else {
+                            return variable_type_from_string("String"); // FIX
+                        }
+                    }
+                }
+            }
+        }
+    };
+    None
+}
+
+fn variable_type_from_string(t: &str) -> Option<Box<VariableType>> {
+    None
 }
 
 fn extract_params_from_openapi(parameters: Vec<ReferenceOr<Parameter>>) -> Vec<Variable> {

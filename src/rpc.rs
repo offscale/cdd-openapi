@@ -18,7 +18,7 @@ fn sanitise_filename(filename: &str) -> Option<String> {
         .and_then(|filename| filename.to_str().map(|filename| filename.to_string()))
 }
 
-pub fn start_server() {
+pub fn start(hostname: &str) {
     let mut io = IoHandler::new();
 
     // all exposed rpc methods:
@@ -26,12 +26,13 @@ pub fn start_server() {
     io.add_method("template", template);    // return a pre-made openapi template
     io.add_method("default", default);      // get a default template
     io.add_method("parse", parse);          // parse openapi yaml into an adt
+    io.add_method("serialise", serialise);  // parse openapi yaml into a json structure
 
 	let server = ServerBuilder::new(io)
 		.start(&"0.0.0.0:7777".parse().unwrap())    // todo: custom ports
 		.expect("Server must start with no issues");
 
-	server.wait().unwrap()
+    server.wait().unwrap()
 }
 
 fn template(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
@@ -74,6 +75,39 @@ fn default(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
         .map_err(|e| rpc_error(&format!("{}", e)))
 }
 
+#[derive(serde::Deserialize, Debug)]
+pub struct SerialiseRequest {
+    code: String,
+}
+
+fn serialise(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
+    // log(format!("-> serialise: {:?}", params));
+    let params: SerialiseRequest = params.parse()?;
+
+    crate::parser::parse_yaml_to_openapi(&params.code)
+        .map_err(|e| rpc_error(&format!("{:?}", e)))
+        .and_then(|openapi|
+            serde_json::from_str(&format!("{{\"ast\": {}}}", serde_json::to_string(&openapi).unwrap()))
+                .map_err(|e| rpc_error(&format!("serde_json::from_str {:?} {:?}", e, openapi)))
+        )
+}
+
+// fn serialise(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
+//     log(format!("-> serialise: {:?}", params));
+
+//     #[derive(serde::Deserialize, Debug)]
+//     pub struct SerialiseRequest {
+//         code: String,
+//     }
+
+//     let request: SerialiseRequest = params
+//         .parse()
+//         .map(|project| serde_json::json!({"ast": ""}))
+//         .map_err(|e| rpc_error(&format!("{}", e)))?;
+
+
+// }
+
 fn parse(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
     log(format!("-> parse: {:?}", params));
 
@@ -85,7 +119,7 @@ fn parse(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
     let request: CodeRequest = params.parse().map_err(|e| rpc_error(&format!("{}", e)))?;
 
     crate::parser::parse_yaml_to_project(&request.code)
-        .map(|project: cdd::Project| serde_json::json!({"project": project}))
+        .map(|project: cdd::Project| serde_json::json!({"project": project, "code": ""}))
         .map_err(|e| rpc_error(&format!("{}", e)))
 }
 
