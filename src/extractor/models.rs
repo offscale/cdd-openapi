@@ -55,10 +55,10 @@ fn extract_variables_from_openapi(object_type: ObjectType) -> Vec<Variable> {
                 name,
                 optional: false, // write function for this
                 value: None,
-                variable_type
+                variable_type,
             });
         }
-    };
+    }
 
     variables
 }
@@ -77,9 +77,7 @@ fn convert_openapi_type_to_variable_type(t: Type) -> VariableType {
         Type::String(_) => VariableType::StringType,
         Type::Number(_) => VariableType::FloatType,
         Type::Integer(_) => VariableType::IntType,
-        Type::Object(_) => {
-            VariableType::ComplexType("Need to implement".to_string())
-        } //Need to implement
+        Type::Object(_) => VariableType::ComplexType("Need to implement".to_string()), //Need to implement
         Type::Array(val) => {
             // let item_type = extract_variable_type_from_openapi(val.items.clone().unbox());
             // VariableType::ArrayType(Box::new(item_type))

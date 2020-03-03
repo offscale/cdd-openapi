@@ -1,5 +1,5 @@
-use openapiv3::*;
 use indexmap::*;
+use openapiv3::*;
 
 pub fn petstore() -> OpenAPI {
     OpenAPI {
