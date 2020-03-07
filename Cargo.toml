@@ -1,10 +1,13 @@
 [package]
 name = "cdd-openapi"
 version = "0.1.0"
+description = "cdd-openapi is a Rust library that exposes a JSON-RPC interface to OpenAPI [Swagger] manipulation, following Compiler Driven Development (CDD) methodology."
 authors = ["Rob Saunders <rob@wearebrandnew.com>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "Apache-2.0 OR MIT"
+repository = "https://github.com/offscale/cdd-openapi"
+homepage = "https://compilers.com.au"
+readme = "README.md"
 
 [dependencies]
 openapiv3 = "0.3"

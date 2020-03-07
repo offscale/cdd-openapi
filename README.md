@@ -1,12 +1,14 @@
 cdd-openapi
 ===========
-Rust OpenAPI JSON-RPC socket server.
+[![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+`cdd-openapi` is a Rust library that exposes a JSON-RPC interface to OpenAPI [Swagger] manipulation, following Compiler Driven Development (CDD) methodology.
 
 ### CLI instructions
 
 ```bash
-# Install Rust (nightly)
-$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain nightly
+# Install Rust
+$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain stable
 # Install cargo-make (cross-platform feature-rich reimplementation of Make)
 $ cargo install --force cargo-make
 # Install rustfmt (Rust formatter)
@@ -20,6 +22,8 @@ $ cargo test
 # Format, build and test
 $ cargo make
 ```
+
+---
 
 ## License
 
