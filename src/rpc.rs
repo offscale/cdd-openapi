@@ -28,6 +28,7 @@ pub fn start(hostname: &str) {
     io.add_method("default", default);      // get a default template
     io.add_method("parse", parse);          // parse openapi yaml into an adt
     io.add_method("serialise", serialise);  // parse openapi yaml into a json structure
+    io.add_method("deserialise", deserialise);
 
     let server = ServerBuilder::new(io)
         .start(&"0.0.0.0:7777".parse().unwrap()) // todo: custom ports
@@ -93,6 +94,30 @@ fn serialise(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> 
                 .map_err(|e| rpc_error(&format!("serde_json::from_str {:?} {:?}", e, openapi)))
         )
 }
+
+fn deserialise(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
+    log(format!("-> deserialise: {:?}", params));
+    let params: DeserialiseRequest = params.parse()?;
+
+    let response = crate::parser::parse_json_to_yaml(&params.ast)
+        .map(|openapi| serde_json::json!({ "output": openapi }))
+        .map_err(|e| rpc_error(&format!("{}", e)));
+
+    println!("<- deserialise: {:?}", response);
+    response
+}
+
+// log(format!("-> deserialise: {:?}", params));
+    
+// let params: DeserialiseRequest = params.parse()?;
+
+// let code:String = crate::parser::parse_ast_to_code(&params.ast)
+//     .map_err(|e| rpc_error(&format!("{}", e)))?;
+
+// let response = serde_json::json!({ "code": code });
+// println!("<- response: {}", code);
+
+// Ok(response)
 
 // fn serialise(params: jsonrpc_core::Params) -> std::result::Result<Value, Error> {
 //     log(format!("-> serialise: {:?}", params));
